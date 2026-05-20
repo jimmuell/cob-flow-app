@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, RefreshCw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,8 +60,8 @@ export function TopBarClient({ currentUser, activeTenantId }: TopBarClientProps)
         </select>
       </form>
 
-      {/* Role toggle — Server Action → revalidatePath → sidebar nav re-gates, chip updates */}
-      <form action={setRoleToggleAction}>
+      {/* Role toggle — visible at sm+; on mobile, role switching moves to account menu */}
+      <form action={setRoleToggleAction} className="hidden sm:block">
         <button
           type="submit"
           title="Toggle demo role: Analyst → Supervisor → Manager → Admin → Analyst"
@@ -98,6 +98,14 @@ export function TopBarClient({ currentUser, activeTenantId }: TopBarClientProps)
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled className="text-[11px] text-slate-500">
             COB Flow · v0.8
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => startTransition(() => { setRoleToggleAction(); })}
+            className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer"
+          >
+            <RefreshCw className="w-4 h-4 text-slate-500" />
+            Switch role (demo)
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
