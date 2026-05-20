@@ -57,7 +57,7 @@ export const config = {
 
 Rules (in order):
 1. `cob_user_id` cookie absent + path is not `/signin` → `NextResponse.redirect('/signin')`
-2. `cob_user_id` cookie present + path is `/signin` → `NextResponse.redirect('/dashboard')`
+2. ~~`cob_user_id` cookie present + path is `/signin` → `NextResponse.redirect('/dashboard')`~~ **As-built: handled in sign-in page, not middleware.** The matcher excludes `/signin` to prevent an infinite redirect loop (unauthenticated user → middleware redirects to `/signin` → middleware fires again → repeat). Because `/signin` is fully excluded from the matcher, Rule 2 never runs. Instead, the sign-in page itself calls `getCurrentUser()` at the top; if a user is found it calls `redirect('/dashboard')` before rendering.
 3. Otherwise → `NextResponse.next()`
 
 Role gates are **not** in middleware. They live in the Management and Admin layout files (Phase E and F), where `getCurrentUser()` is available to read the user's role.
@@ -114,7 +114,7 @@ Existing `getCurrentUser()`, `signIn()`, `signOut()` are unchanged.
 
 Reads `userId` (demo accounts picker — hidden input) or falls back to `email` (form input). Calls `signIn(id, password)` from `lib/auth/session.ts`.
 - Success → `redirect('/dashboard')`
-- Failure → `redirect('/signin?error=Invalid+credentials')`
+- Failure → `redirect('/signin?error=' + encodeURIComponent('Invalid credentials'))` — uses percent-encoding so `decodeURIComponent` on the page renders `"Invalid credentials"` cleanly (not `"Invalid+credentials"`)
 
 ### `signOutAction()`
 

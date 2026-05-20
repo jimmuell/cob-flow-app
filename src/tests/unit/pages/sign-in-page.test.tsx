@@ -1,5 +1,7 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/session";
 
 // Mock server-only dependencies
 vi.mock("@/lib/actions/auth", () => ({ signInAction: vi.fn() }));
@@ -8,7 +10,26 @@ vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 import SignInPage from "@/app/(auth)/signin/page";
 
+describe("SignInPage — authenticated redirect (T9-fix regression)", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("calls redirect('/dashboard') when getCurrentUser() returns a user", async () => {
+    vi.mocked(getCurrentUser).mockResolvedValueOnce({
+      id: "u_jm",
+      name: "J. Mueller",
+      initials: "JM",
+      email: "u_jm@cobflow.demo",
+      roles: ["ANALYST"],
+      level: "SENIOR",
+      tenantId: "t_carrier",
+    });
+    await SignInPage({ searchParams: Promise.resolve({}) });
+    expect(vi.mocked(redirect)).toHaveBeenCalledWith("/dashboard");
+  });
+});
+
 describe("SignInPage — error display (CP2 coverage)", () => {
+  beforeEach(() => vi.clearAllMocks());
   it("shows the error banner when searchParams.error is set", async () => {
     const element = await SignInPage({
       searchParams: Promise.resolve({ error: "Invalid%20credentials" }),
