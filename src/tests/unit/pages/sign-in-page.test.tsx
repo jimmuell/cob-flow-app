@@ -47,7 +47,7 @@ describe("SignInPage — error display (CP2 coverage)", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("renders all 9 demo account buttons", async () => {
+  it("renders all 9 demo account buttons with role-only chips (no Senior Analyst)", async () => {
     const element = await SignInPage({
       searchParams: Promise.resolve({}),
     });
@@ -58,5 +58,7 @@ describe("SignInPage — error display (CP2 coverage)", () => {
     // 9 hidden userId inputs = 9 demo users
     const hiddenInputs = document.querySelectorAll('input[name="userId"]');
     expect(hiddenInputs).toHaveLength(9);
+    // Job Level must not surface in the chip — J. Mueller renders "Analyst" not "Senior Analyst"
+    expect(screen.queryByText("Senior Analyst")).not.toBeInTheDocument();
   });
 });

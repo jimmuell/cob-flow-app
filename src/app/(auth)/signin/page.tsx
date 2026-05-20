@@ -49,7 +49,7 @@ export default async function SignInPage({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-medium text-slate-700">Password</label>
-                <span className="text-xs text-slate-400">Demo: any password accepted</span>
+                <span className="text-xs text-slate-400 cursor-default">Forgot password?</span>
               </div>
               <input
                 type="password"
@@ -87,8 +87,7 @@ export default async function SignInPage({
           <p className="text-xs text-slate-500 mb-3">Click a user to sign in without typing credentials.</p>
           <div className="space-y-1">
             {USERS.map((u) => {
-              const labelKey = u.level === "SENIOR" ? "SENIOR_ANALYST" : u.role;
-              const roleLabel = ROLE_LABELS[labelKey] ?? ROLE_LABELS.ANALYST;
+              const roleLabel = ROLE_LABELS[u.role];
               return (
                 <form key={u.id} action={signInAction}>
                   <input type="hidden" name="userId" value={u.id} />
