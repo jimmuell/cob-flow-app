@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-// Mock the server action so the sign-in page can be rendered in jsdom
+// Mock server-only dependencies
 vi.mock("@/lib/actions/auth", () => ({ signInAction: vi.fn() }));
+vi.mock("@/lib/auth/session", () => ({ getCurrentUser: vi.fn().mockResolvedValue(null) }));
+vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 
 import SignInPage from "@/app/(auth)/signin/page";
 

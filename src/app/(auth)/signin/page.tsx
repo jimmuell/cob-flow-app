@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { signInAction } from "@/lib/actions/auth";
+import { getCurrentUser } from "@/lib/auth/session";
 import { USERS } from "@/lib/mock/users";
 import { ROLE_LABELS } from "@/lib/mock/role-labels";
 
@@ -7,6 +9,11 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  // Middleware matcher excludes /signin to prevent redirect loops,
+  // so authenticated-user redirect is handled here instead.
+  const user = await getCurrentUser();
+  if (user) redirect("/dashboard");
+
   const { error } = await searchParams;
 
   return (
