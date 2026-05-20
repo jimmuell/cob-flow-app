@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { Menu, X, LogOut } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ export function TopBarClient({ currentUser, activeTenantId }: TopBarClientProps)
   // AppShellContext is provided by AppShellClient which wraps both TopBarClient
   // and SidebarSheet — they share the same context instance.
   const { sidebarOpen, setSidebarOpen } = useAppShell();
+  const [, startTransition] = useTransition();
   const role = currentUser.roles[0];
 
   return (
@@ -98,16 +100,12 @@ export function TopBarClient({ currentUser, activeTenantId }: TopBarClientProps)
             COB Flow · v0.8
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <form action={signOutAction} className="w-full">
-              <button
-                type="submit"
-                className="flex items-center gap-2 w-full text-sm text-slate-700"
-              >
-                <LogOut className="w-4 h-4 text-slate-500" />
-                Sign out
-              </button>
-            </form>
+          <DropdownMenuItem
+            onSelect={() => startTransition(() => { signOutAction(); })}
+            className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer"
+          >
+            <LogOut className="w-4 h-4 text-slate-500" />
+            Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
