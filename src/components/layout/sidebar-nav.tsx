@@ -2,14 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils/classnames";
+import {
+  LayoutDashboard,
+  FileText,
+  Activity,
+  DollarSign,
+  Users,
+  Settings,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils/classnames";
+
+// Icon resolved on the client — functions can't cross the Server→Client boundary as props.
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  FileText,
+  Activity,
+  DollarSign,
+  Users,
+  Settings,
+};
 
 export interface NavItem {
   id: string;
   label: string;
   href: string;
-  Icon: LucideIcon;
+  iconId: string;
   children?: { id: string; label: string; href: string }[];
 }
 
@@ -29,6 +47,7 @@ export function SidebarNav({ navItems }: SidebarNavProps) {
           ? isParentActive
           : pathname.startsWith(item.href);
 
+        const Icon = ICON_MAP[item.iconId];
         return (
           <div key={item.id}>
             {/* Parent item links to first child href if it has children */}
@@ -41,7 +60,7 @@ export function SidebarNav({ navItems }: SidebarNavProps) {
                   : "text-slate-700 hover:bg-slate-100"
               )}
             >
-              <item.Icon className="w-5 h-5" />
+              {Icon && <Icon className="w-5 h-5" />}
               {item.label}
             </Link>
 

@@ -1,11 +1,3 @@
-import {
-  LayoutDashboard,
-  FileText,
-  Activity,
-  DollarSign,
-  Users,
-  Settings,
-} from "lucide-react";
 import { SidebarNav, type NavItem } from "./sidebar-nav";
 import { SidebarSheet } from "./sidebar-sheet";
 import { TENANTS } from "@/lib/mock/tenants";
@@ -22,16 +14,16 @@ export async function Sidebar({ currentUser }: SidebarProps) {
   const tenant = TENANTS.find((t) => t.id === activeTenantId);
 
   const allItems: NavItem[] = [
-    { id: "dashboard", label: "Dashboard",        href: "/dashboard", Icon: LayoutDashboard },
-    { id: "claims",    label: "Claims & Triage",  href: "/claims",    Icon: FileText        },
-    { id: "cob",       label: "COB Analyzer",     href: "/cob",       Icon: Activity        },
-    { id: "recovery",  label: "Recovery Tracker", href: "/recovery",  Icon: DollarSign      },
+    { id: "dashboard", label: "Dashboard",        href: "/dashboard", iconId: "LayoutDashboard" },
+    { id: "claims",    label: "Claims & Triage",  href: "/claims",    iconId: "FileText"        },
+    { id: "cob",       label: "COB Analyzer",     href: "/cob",       iconId: "Activity"        },
+    { id: "recovery",  label: "Recovery Tracker", href: "/recovery",  iconId: "DollarSign"      },
     ...(isSupervisor(currentUser) || isManager(currentUser)
       ? [{
           id: "management",
           label: "Management",
           href: "/management",
-          Icon: Users,
+          iconId: "Users",
           children: [
             { id: "mgmt-overview", label: "Overview", href: "/management/overview" },
             { id: "mgmt-team",     label: "Team",     href: "/management/team"     },
@@ -39,7 +31,7 @@ export async function Sidebar({ currentUser }: SidebarProps) {
         }]
       : []),
     ...(isAdmin(currentUser)
-      ? [{ id: "admin", label: "Admin", href: "/admin", Icon: Settings }]
+      ? [{ id: "admin", label: "Admin", href: "/admin", iconId: "Settings" }]
       : []),
   ];
 
