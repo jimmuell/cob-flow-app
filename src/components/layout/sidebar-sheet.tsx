@@ -16,7 +16,7 @@ export function SidebarSheet({ children }: SidebarSheetProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-10 bg-black/20 md:hidden"
+        className="fixed inset-0 z-10 bg-black/40 md:hidden"
         onClick={() => setSidebarOpen(false)}
         aria-hidden="true"
       />
