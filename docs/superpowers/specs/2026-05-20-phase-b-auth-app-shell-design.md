@@ -47,8 +47,10 @@ Cookie-presence check only — no user shape, no DB call, runs on the edge.
 
 ```ts
 export const config = {
+  // api/* is excluded so future JSON endpoints receive a 401 from their own handler
+  // rather than an HTML redirect — add auth checks inside those route handlers.
   matcher: [
-    '/((?!signin|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!signin|api|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
 ```
@@ -80,7 +82,7 @@ Calls `getCurrentUser()`:
 ## 4. `app/layout.tsx` (root layout)
 
 Replace the scaffold. Changes:
-- Swap Geist for **Inter** via `next/font/google` (handoff §13 — subtle quality upgrade, no design change).
+- Swap Geist for **Inter** via `next/font/google`. **Design decision:** the prototype uses the browser system font stack (no font import in `COB_Flow_MVP.html`). Inter is an intentional upgrade chosen here — slightly sharper on non-Apple hardware, widely used in SaaS UIs, free via Google Fonts. This is a Phase B design call, not a prototype carry-over.
 - Update `metadata`: `title: "COB Flow"`, `description: "Decision-support for coordination of benefits."`.
 - Remove scaffold boilerplate.
 
@@ -91,13 +93,16 @@ Replace the scaffold. Changes:
 Add `getActiveTenant()`:
 
 ```ts
+import { cookies } from "next/headers";
+
 export async function getActiveTenant(): Promise<string> {
   // Default to t_carrier (Lakeshore Health Plan) — the pass-1 single tenant and the demo's opening posture.
-  const { cookies } = await import("next/headers");
   const jar = await cookies();
   return jar.get("cob_tenant_id")?.value ?? "t_carrier";
 }
 ```
+
+Uses a top-level `import { cookies } from "next/headers"` — no dynamic import needed here. (`getCurrentUser` in the same file uses a dynamic import as a historical artifact; that can be cleaned up separately, but do not change it as part of Phase B.)
 
 Existing `getCurrentUser()`, `signIn()`, `signOut()` are unchanged.
 
@@ -142,9 +147,11 @@ Reads `tenantId` from formData, writes `cob_tenant_id` cookie, calls `revalidate
 ## 8. `lib/contexts/app-shell-context.tsx`
 
 ```ts
+import { createContext, useContext, Dispatch, SetStateAction } from "react";
+
 interface AppShellContextValue {
   sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
+  setSidebarOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -156,6 +163,8 @@ export function useAppShell(): AppShellContextValue {
 }
 ```
 
+`Dispatch<SetStateAction<boolean>>` is the correct type for a `useState` setter — it accepts both `setSidebarOpen(true)` and the functional-updater form `setSidebarOpen(o => !o)` used in the hamburger handler. `(open: boolean) => void` would reject the functional form.
+
 ---
 
 ## 9. `components/layout/app-shell-client.tsx`
@@ -166,7 +175,18 @@ export function useAppShell(): AppShellContextValue {
 
 ## 10. Sign-in page — `app/(auth)/signin/page.tsx`
 
-Pure Server Component. Reads `searchParams.error` to display inline error from a failed `signInAction`.
+Server Component (async). In Next.js 15, `searchParams` is a Promise and must be awaited:
+
+```ts
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+  // ...
+}
+```
 
 **Layout:** `bg-slate-50 min-h-screen flex items-center justify-center p-4`. Max-width container `w-full max-w-md`.
 
@@ -279,7 +299,7 @@ Outer aside: `hidden md:block w-56 shrink-0 border-r border-slate-200`.
 
 Customer-mode info box at the bottom of the sidebar: reads `getActiveTenant()`, looks up tenant name + mode from `TENANTS`, renders `bg-slate-50 border border-slate-200 rounded-lg text-xs` box showing mode and "Data isolation: row-level".
 
-### `SidebarNav` — `"use client"` (co-located in `sidebar.tsx` or extracted)
+### `components/layout/sidebar-nav.tsx` — `"use client"`
 
 Uses `usePathname()`. Active detection: prefix match (`pathname.startsWith(item.path)`). Management parent shows children when `pathname.startsWith('/management')`. Active item style: `bg-brand-50 text-brand-700 font-medium`. Inactive: `text-slate-700 hover:bg-slate-100`. Child items indent with `ml-3 border-l border-slate-200 pl-3`.
 
@@ -378,4 +398,4 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
 - [ ] Account menu (`DropdownMenu`) opens, shows user info and role chip, closes on outside click
 - [ ] No `user.role === "..."` string comparisons outside `lib/authority/roles.ts`
 - [ ] No `useState` for role or tenant in any client component
-- [ ] `app/(app)/not-found.tsx` renders when navigating to `/claims/nonexistent`
+- [ ] `app/(app)/not-found.tsx` exists and renders its empty-state card markup (visual inspection only — `/claims` is not a Phase B route, so end-to-end `notFound()` triggering is deferred to Phase D acceptance criteria)
