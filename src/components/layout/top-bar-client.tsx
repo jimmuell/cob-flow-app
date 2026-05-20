@@ -50,7 +50,7 @@ export function TopBarClient({ currentUser, activeTenantId }: TopBarClientProps)
           name="tenantId"
           defaultValue={activeTenantId}
           onChange={(e) => e.currentTarget.form?.requestSubmit()}
-          className="text-xs sm:text-sm border border-slate-300 rounded-md py-1.5 px-2 bg-white text-slate-700 max-w-[150px] sm:max-w-none"
+          className="text-xs sm:text-sm border border-slate-300 rounded-md py-1.5 px-2 bg-white text-slate-700 max-w-[100px] sm:max-w-none truncate"
         >
           {TENANTS.map((t) => (
             <option key={t.id} value={t.id}>

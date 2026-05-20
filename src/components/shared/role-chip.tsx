@@ -30,7 +30,7 @@ export function RoleChip({ role, initials, showLabel = false }: RoleChipProps) {
       <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold">
         {initials}
       </div>
-      {showLabel && <span className="text-xs font-medium">{label}</span>}
+      {showLabel && <span className="hidden sm:inline text-xs font-medium">{label}</span>}
     </div>
   );
 }

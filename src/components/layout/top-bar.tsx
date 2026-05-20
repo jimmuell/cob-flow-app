@@ -14,7 +14,7 @@ export function TopBar({ currentUser, activeTenantId }: TopBarProps) {
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-sm">
           CF
         </div>
-        <div className="font-semibold text-slate-800">COB Flow</div>
+        <span className="hidden sm:inline font-semibold text-slate-800">COB Flow</span>
         <span className="hidden sm:inline-flex text-[10px] bg-red-100 text-red-800 px-1.5 py-0.5 rounded-full font-medium">
           Wisconsin pilot · MVP
         </span>
