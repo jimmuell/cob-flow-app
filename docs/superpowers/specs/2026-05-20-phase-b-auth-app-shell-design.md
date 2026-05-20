@@ -270,7 +270,9 @@ Props: `currentUser: CurrentUser`, `activeTenantId: string`. Four interactive zo
    - `DropdownMenuSeparator`
    - Non-interactive item: "COB Flow · v0.8"
    - `DropdownMenuSeparator`
-   - Sign-out item: `<form action={signOutAction}><button type="submit">` with lucide `LogOut` icon + "Sign out"
+   - Sign-out item: `<DropdownMenuItem onSelect={() => startTransition(() => { signOutAction(); })}>` with lucide `LogOut` icon + "Sign out". Requires `useTransition` imported from React at the top of the component.
+
+> **As-built deviation (Phase B):** Original design used `<DropdownMenuItem asChild><form action={signOutAction}><button type="submit">`. Radix `asChild` forwards its `onClick`/`onSelect` handler to the immediate child element — the `<form>` — not to the `<button>` inside it. A `<form>` does not submit itself on click, so the action never fired. Fix: call the Server Action directly inside `onSelect` via `startTransition`, which is the correct pattern for invoking Server Actions from Radix menu items. `startTransition` is required to prevent React from treating the action's async navigation as a synchronous state update.
 
 ---
 
@@ -390,7 +392,7 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
 - [ ] Visiting `/` redirects to `/signin` when signed out; redirects to `/dashboard` when signed in
 - [ ] Sign-in via email form works (any non-empty password) for all 9 seeded users
 - [ ] Sign-in via demo accounts panel works for all 9 seeded users without typing
-- [ ] Sign-out from account menu clears session and returns to `/signin`
+- [ ] Sign-out from account menu clears session and returns to `/signin` — **must be covered by a CP4 E2E test** (unit tests cover the Server Action in isolation; the Radix DropdownMenu click→submit path requires Playwright to verify end-to-end)
 - [ ] Role toggle cycles J. Mueller → T. Ramos → D. Berger → S. Patel → J. Mueller
 - [ ] After role toggle, sidebar nav adjusts: Management appears for SUPERVISOR/MANAGER, disappears for ANALYST/ADMIN; Admin appears for ADMIN only
 - [ ] Tenant dropdown updates the customer-mode info box in the sidebar

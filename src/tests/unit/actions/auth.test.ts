@@ -70,4 +70,10 @@ describe("signOutAction", () => {
     await expect(signOutAction()).rejects.toThrow("NEXT_REDIRECT:/signin");
     expect(mockCookieStore.delete).toHaveBeenCalledWith("cob_user_id");
   });
+
+  // NOTE: This test covers the Server Action in isolation.
+  // The component wiring — TopBarClient DropdownMenuItem onSelect → startTransition → signOutAction —
+  // cannot be driven in jsdom because Radix DropdownMenu requires pointer events to open.
+  // Coverage for the full click→redirect path lives in the CP4 E2E suite:
+  //   src/tests/e2e/phase-b.spec.ts  →  "sign out from account menu returns to /signin"
 });
