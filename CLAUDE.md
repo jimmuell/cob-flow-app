@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> Working model: see `DIVISION_OF_LABOR.md` at the repo root for how Jim, Cowork (the planning layer in Claude.ai desktop), and the Claude Code agents (the per-repo execution layer) collaborate.
+
 ## Project
 
 COB Flow — decision-support SaaS for healthcare coordination of benefits (COB), auto med-pay/PIP recovery, and post-payment subrogation. Wisconsin pilot state. Engine recommends, analyst signs every determination.
