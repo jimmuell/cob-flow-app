@@ -281,7 +281,9 @@ Built against COB_Flow_Product_Spec_v0.8.docx (§3, §6, §8–11, §14) and COB
 
 All 14 acceptance criteria (spec §17) pass; criterion 14 (`not-found.tsx` end-to-end trigger) is scoped to visual inspection only in Phase B — E2E trigger coverage deferred to Phase D per the criterion text.
 
-**What's working:** Sign-in page (email form + nine-user demo-account picker), cookie-backed mock session (`getCurrentUser` / `getActiveTenant`), auth middleware with inverted matcher, four-state role toggle (Server Action + `revalidatePath`), tenant dropdown, sticky top bar with shadcn DropdownMenu account menu, role-gated sidebar nav (two-level hierarchy, pathname-aware active state, mobile SidebarSheet overlay), boundary pages (`error.tsx`, `not-found.tsx`, `global-error.tsx`). 26 unit tests across 6 files + 8 Playwright E2E tests. Build, typecheck, and lint clean. Remote: `github.com/jimmuell/cob-flow-app`, branch `main` at `225c27a`.
+**What's working:** Sign-in page (email form + nine-user demo-account picker), cookie-backed mock session (`getCurrentUser` / `getActiveTenant`), auth middleware with inverted matcher, four-state role toggle (Server Action + `revalidatePath`), tenant dropdown, sticky top bar with shadcn DropdownMenu account menu, role-gated sidebar nav (two-level hierarchy, pathname-aware active state, mobile SidebarSheet overlay), boundary pages (`error.tsx`, `not-found.tsx`, `global-error.tsx`). 26 unit tests across 6 files + 8 Playwright E2E tests. Build, typecheck, and lint clean. Remote: `github.com/jimmuell/cob-flow-app`, branch `main` at `79cc377`.
+
+**Mobile polish (post-CP4, 2026-05-20):** Compact top bar at `< sm` viewports (commits `9b314fb`, `597b275`, `79cc377`). Wordmark "COB Flow" renders inline next to the CF logo at `text-sm`; "Wisconsin pilot · MVP" sub-line hidden on mobile. Tenant dropdown truncates via `max-w-[100px]`. Role toggle chip hidden on mobile; role switching available via "Switch role (demo)" item in account menu (visible at all sizes for consistent menu structure). Sidebar sheet backdrop deepened to `bg-black/40` for clearer dismiss affordance.
 
 **What Phase C inherits:**
 
@@ -293,6 +295,27 @@ All 14 acceptance criteria (spec §17) pass; criterion 14 (`not-found.tsx` end-t
 **Two spec deviations documented (spec §2 and §13):**
 1. Middleware excludes `/signin` from matcher; authenticated redirect handled in the sign-in page itself (T9-fix — Rule 2 never fires in middleware).
 2. Sign-out uses `onSelect + useTransition + direct action call` instead of `<DropdownMenuItem asChild><form>` (Radix `asChild` forwards its handler to the `<form>` element, not its submit button).
+
+### Phase B.1 — Scaffolding recovery (2026-05-21)
+
+**Root cause:** Phase A scaffolding (`.gitignore`, `next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `src/lib/` boundaries, `supabase/`, and source spec docs) was never committed. Phase B work was built on top of an uncommitted Phase A working tree. The repo at `79cc377` contained only Phase B source files; a fresh clone would not build and `src/lib/mock/` was unavailable to Phase C.
+
+**Recovery commits (all pushed in one batch, 2026-05-21):**
+- `c1a052e` — `.gitignore` (first, so generated artifacts stay untracked: `playwright-report/`, `test-results/`, `.claude/settings.local.json`)
+- `f1bfbc6` — Next.js build config + project root files (`next.config.ts`, `tsconfig.json`, `postcss.config.mjs`, `README.md`, `public/`, `src/app/favicon.ico`)
+- `f7edd57` — Phase A lib scaffolding: `lib/types/`, `lib/mock/` (18 fixture files), `lib/authority/` (`canPerform` + `roles.ts`), `lib/engine/` (primacy, wi-overlay, triage, `NO_FAULT_STATES`), `lib/audit/`, `lib/utils/`, `lib/ingest/`
+- `95539be` — Supabase local config (`supabase/config.toml`)
+- `4a05f83` — Source spec + prototype docs (`COB_Flow_MVP.html`, `COB_Flow_NextJS_Conversion_Handoff.md`, `COB_Flow_Product_Spec_v0.8.docx`, `COB_Flow_Dashboard_Spec_v0.1.docx`, `COB_Flow_WI_Workflow_v1.0.docx`)
+
+**Post-recovery state:** Repo now builds from a clean clone. `src/lib/mock/` is available. All Phase B patterns and tests remain intact.
+
+### Phase C — Read-only workspaces (planned, not started)
+
+**Scope (per Conversion Handoff §15):** three read-only workspaces — Dashboard, Claims & Triage list, Recovery Tracker. Phase C does NOT include the COB Analyzer, Claim Detail tabs, Management workspace, or Admin workspace — those are Phases D / E / F respectively. Resist the temptation to bundle them.
+
+**Schema-timing decision (locked 2026-05-20):** Pass 1 stays fully fixture-based. Phase C reads from typed TypeScript fixtures in `src/lib/mock/` (TENANTS, USERS, SAMPLE_CLAIMS, SAMPLE_RECOVERIES, etc. — already ported from the prototype in Phase A). Drizzle ORM is wired up and `src/lib/db/schema.ts` is a placeholder; no tables are defined. Local Supabase Postgres is running but unused. Real schema design is deferred to pass 2, after GTM Phase 1 customer discovery surfaces what real claim feeds look like and before the HIPAA cost cliff (~$3.5–4k/mo) is crossed. Option 2 (wire one table end-to-end) and Option 3 (full schema design, no data migration) were both considered and deferred.
+
+**Phase C working pattern:** Read-only means render-from-fixtures, no edit forms, no mutations. Lean on Server Components for fixture reads (no client-side data fetching needed). Each workspace is an independent route under `(app)/`; no shell changes required. TanStack Table powers the Claims & Triage list per spec §7. Mobile responsiveness preserved.
 
 ---
 
