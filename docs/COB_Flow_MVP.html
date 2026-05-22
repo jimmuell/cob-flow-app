@@ -1110,6 +1110,159 @@ const CUSTOMER_FEEDS = [
   },
 ];
 
+/* =========================================================================
+   CONTENT MANAGER SEED DATA
+   1 sequence, 1 course, 3 modules, 3 module MC quizzes, 1 FR capstone,
+   enrollments, lesson completions, quiz attempts, authority unlocks, notifications.
+   ========================================================================= */
+const CM_SEQUENCES = [
+  { id: "seq_001", title: "Auto COB Analyst Onboarding — Wisconsin", targetRole: "ANALYST",
+    courseIds: ["course_001"], createdBy: "platform", tenantId: null, status: "published",
+    description: "Complete onboarding path for Wisconsin-pilot analysts. Covers foundations through COB fundamentals.",
+    unlockOnCompletion: { authorityBoost: { settlement: 5000, demand: 10000 } } },
+];
+
+const CM_COURSES = [
+  { id: "course_001", title: "Auto COB — Wisconsin Pilot", status: "published",
+    description: "Three-module pilot of the full 12-chapter Auto COB Wisconsin curriculum. Validates the format end-to-end.",
+    tier: "Analyst", estimatedHours: 4, moduleCount: 3, createdBy: "platform", tenantId: null,
+    publishedAt: "2026-05-01" },
+];
+
+const CM_MODULES = [
+  { id: "mod_001", courseId: "course_001", order: 1, title: "Chapter 1 — Foundations: Why Auto COB Exists",
+    status: "published", estimatedMinutes: 90,
+    slides: [
+      { id: "s1_1", heading: "What Is Auto COB?",
+        body: "Auto COB arises when a health plan pays medical bills for injuries caused by a motor vehicle accident. The health plan has a legal right of subrogation and coordination to recover those payments from the responsible auto insurer — not from the member." },
+      { id: "s1_2", heading: "Wisconsin Is an At-Fault State",
+        body: "Wisconsin is NOT a no-fault state. The at-fault driver's auto liability policy is the primary source of recovery for accident-related medical expenses. There is no mandatory PIP in Wisconsin; Med-Pay is optional under Wis. Stat. § 632.32." },
+      { id: "s1_3", heading: "Made-Whole Doctrine",
+        body: "Under Wisconsin common law (Rimes v. State Farm, 106 Wis. 2d 263, 1982), a subrogating health plan cannot recover until the member has been fully compensated for ALL losses — not just medical. If the settlement leaves the member short, the plan's recovery is subordinate." },
+      { id: "s1_4", heading: "The Recovery Workflow in One Sentence",
+        body: "A claim arrives → triage identifies subrogation potential → COB primacy is determined → demand is sent to the auto carrier or attorney → settlement is negotiated → the common-fund pro-rata attorney fee share is applied → the Plan receives its net recovery." },
+    ] },
+  { id: "mod_002", courseId: "course_001", order: 2, title: "Chapter 2 — Auto Insurance: Crash Course for Health-Side Learners",
+    status: "published", estimatedMinutes: 75,
+    slides: [
+      { id: "s2_1", heading: "The Five Coverage Types You'll Encounter",
+        body: "Liability coverage (pays the other party), Med-Pay (pays the policyholder's medical bills regardless of fault), PIP (mandatory no-fault states only — not WI), UM/UIM (uninsured / underinsured motorist), and Collision/Comprehensive (property damage, rarely relevant to health recovery)." },
+      { id: "s2_2", heading: "Med-Pay in Wisconsin",
+        body: "Med-Pay is optional in Wisconsin under Wis. Stat. § 632.32. When present it pays the policyholder's medical bills up to the policy limit (often $1,000–$10,000). Because Wisconsin is at-fault, Med-Pay is typically secondary to the health plan in the COB hierarchy — but plan language and policy COB provisions control." },
+      { id: "s2_3", heading: "Auto Policy COB Clauses",
+        body: "Auto policies often have 'excess clauses' that try to make the auto coverage pay only what is left after other insurance. Health plans (especially self-funded ERISA plans) often have their own COB clauses. These clauses interact — ERISA preemption may override state law on which clause wins." },
+    ] },
+  { id: "mod_003", courseId: "course_001", order: 3, title: "Chapter 3 — COB Fundamentals: The NAIC Framework",
+    status: "published", estimatedMinutes: 80,
+    slides: [
+      { id: "s3_1", heading: "The NAIC Model COB Regulation",
+        body: "The NAIC Model COB Regulation establishes the order in which multiple payers pay for the same loss. Wisconsin has adopted the NAIC model. The goal: no plan pays more than 100% of the covered expense; the primary plan pays first, the secondary plan fills the gap." },
+      { id: "s3_2", heading: "The Five Primary Rules (in order)",
+        body: "1. MEDICAID is always last (payer of last resort by federal statute). 2. MSP rules govern when Medicare and an employer plan both apply. 3. Employee coverage beats dependent coverage. 4. Active-employee coverage beats retiree/COBRA. 5. Birthday rule governs dependent child with two parents' plans." },
+      { id: "s3_3", heading: "ERISA Self-Funded Plans",
+        body: "Self-funded employer plans governed by ERISA are exempt from most state insurance laws, including state COB regulations. The plan's own COB language controls — subject to federal common law. Escape clauses in self-funded plans are generally unenforceable under federal case law (McGurl, PM Group Life)." },
+      { id: "s3_4", heading: "How the Engine Uses These Rules",
+        body: "COB Flow's primacy engine runs each claim through the rules in order — Medicaid → MSP → Employee/Dependent → Birthday → ERISA → Longer/Shorter. The first matching rule wins. The engine returns a determination with a controlling rule, rationale, citations, and a confidence level. The analyst signs every determination." },
+    ] },
+];
+
+const CM_MODULE_QUIZZES = [
+  { id: "qz_mod_001", moduleId: "mod_001", type: "multiple_choice", title: "Chapter 1 Quiz — Foundations",
+    questions: [
+      { id: "q1_1", tier: "Customer | Analyst | Self", topic: "Auto COB purpose",
+        stem: "Which of the following best describes the legal basis for a health plan's Auto COB recovery right?",
+        options: { a: "Health plans profit by keeping medical payments low", b: "Health plans have a right of subrogation and COB to recover from the at-fault party or auto carrier", c: "Auto insurers voluntarily reimburse health plans as an industry courtesy", d: "Federal law requires all auto insurers to pay health plan claims directly" },
+        answer: "b", rationale: "Plans have a subrogation right (recovery from the tortfeasor) and a COB right (coordination with the auto payer). When a third party caused the injury, the health plan that paid can seek recovery from that third party or its insurer." },
+      { id: "q1_2", tier: "Analyst | Self", topic: "Made-whole doctrine",
+        stem: "Under Wisconsin's made-whole doctrine, the health plan's recovery is:",
+        options: { a: "Available immediately upon any settlement being reached", b: "Subordinate to the member's full recovery — plan cannot recover until the member is made whole", c: "Limited to 50% of the plan's paid amount as a default", d: "Governed only by the plan's SPD language, not by state law" },
+        answer: "b", rationale: "Rimes v. State Farm (1982) established that Wisconsin health plans cannot recover until the member has been fully compensated for all losses. The made-whole doctrine can reduce or eliminate plan recovery in cases of partial settlements." },
+    ] },
+  { id: "qz_mod_002", moduleId: "mod_002", type: "multiple_choice", title: "Chapter 2 Quiz — Auto Insurance",
+    questions: [
+      { id: "q2_1", tier: "Customer | Analyst | Self", topic: "Med-Pay in Wisconsin",
+        stem: "Med-Pay coverage in Wisconsin is best described as:",
+        options: { a: "Mandatory on all personal auto policies under Wis. Stat. § 632.32", b: "Optional — available for purchase but not required by Wisconsin law", c: "Prohibited — Wisconsin banned Med-Pay to encourage liability settlements", d: "Only available on commercial fleet policies, not personal auto" },
+        answer: "b", rationale: "Under Wis. Stat. § 632.32, Med-Pay is optional in Wisconsin. Because Wisconsin is an at-fault state (not no-fault), there is no mandatory PIP or Med-Pay requirement. The policyholder's choice to buy or decline Med-Pay affects the available recovery sources." },
+    ] },
+  { id: "qz_mod_003", moduleId: "mod_003", type: "multiple_choice", title: "Chapter 3 Quiz — COB Fundamentals",
+    questions: [
+      { id: "q3_1", tier: "Customer | Analyst | Self", topic: "NAIC primacy rule",
+        stem: "Under the NAIC Model COB Regulation, when an individual is covered as an active employee on one plan and as a dependent spouse on another plan, which plan is primary?",
+        options: { a: "The plan with the higher coverage limits", b: "The plan that has covered the patient the longest", c: "The plan covering the patient as an active employee is primary", d: "Primacy must be determined by a court" },
+        answer: "c", rationale: "NAIC Model COB Regulation § 6(D)(1): A plan covering the patient as an employee (or subscriber) is primary over a plan covering them as a dependent. This is one of the clearest COB rules." },
+    ] },
+];
+
+const CM_COURSE_QUIZ = {
+  id: "qz_course_001", courseId: "course_001", type: "free_response",
+  title: "Capstone Scenario — Auto COB Wisconsin",
+  requiresAttestation: true,
+  scenarios: [
+    { id: "sc_001",
+      title: "The Brennan Recovery",
+      tier: "Analyst | Self",
+      covers: "Chapters 1–3",
+      estimatedMinutes: 20,
+      facts: "Hailey Brennan (age 34) is an active employee covered by Anthem BCBS Wisconsin (fully-insured group plan). She was injured as a passenger in a single-vehicle Wisconsin MVA on 2026-03-18. The driver was cited for failure to yield; Hailey was 20% at fault. Anthem paid $38,520 in accident-related medical benefits. Hailey's auto policy includes American Family Med-Pay with a $5,000 limit. Hailey retained Brennan Law, S.C. (Patrick Brennan, Esq.) to pursue her personal injury claim. The proposed gross settlement is $95,000. Brennan Law's contingency fee is one-third ($31,667).",
+      prompts: [
+        "Identify the controlling COB primacy rule. Which payer is primary for accident-related medical expenses, and why?",
+        "Apply Wisconsin's comparative-negligence framework (Wis. Stat. § 895.045). What is the maximum recoverable medical amount after reducing for Hailey's 20% fault?",
+        "Apply the common-fund doctrine. What is the Plan's net recovery after the pro-rata attorney fee share? Show your calculation.",
+      ],
+      modelAnswer: "1. COB PRIMACY: The controlling rule is AUTO_MEDPAY_OPTIONAL. In a non-no-fault state, Med-Pay coverage is typically secondary to the health plan. Anthem BCBS Wisconsin (health) is primary for the full $38,520 paid. American Family Med-Pay is secondary up to its $5,000 limit. Note: the made-whole doctrine means the Plan should confirm Hailey is made whole before pursuing full recovery.\n\n2. COMPARATIVE NEGLIGENCE: Hailey is 20% at fault, which is below the 51% bar under Wis. Stat. § 895.045. She is not barred from recovery. Recoverable medical = $38,520 × 80% (defendant's fault) = $30,816. This is the maximum the Plan can recover on comparative-negligence grounds.\n\n3. COMMON-FUND: Pro-rata attorney fee share = ($38,520 / $95,000) × $31,667 = $12,841. Net plan recovery = $38,520 − $12,841 = $25,679. This is the Plan's net recovery after honoring the common-fund doctrine. The Plan should document this calculation in the lien reduction offer to Brennan Law.",
+    }
+  ]
+};
+
+const CM_ENROLLMENTS = [
+  { id: "enr_001", userId: "u_jm", sequenceId: "seq_001", enrolledAt: "2026-05-01T08:00:00Z", status: "in_progress", completedAt: null, enrolledBy: "u_tr" },
+  { id: "enr_002", userId: "u_kn", sequenceId: "seq_001", enrolledAt: "2026-05-01T08:00:00Z", status: "in_progress", completedAt: null, enrolledBy: "u_tr" },
+  { id: "enr_003", userId: "u_aw", sequenceId: "seq_001", enrolledAt: "2026-05-01T08:00:00Z", status: "in_progress", completedAt: null, enrolledBy: "u_tr" },
+];
+
+const CM_LESSON_COMPLETIONS = [
+  { id: "lc_001", userId: "u_jm", moduleId: "mod_001", completedAt: "2026-05-05T10:00:00Z", quizAttemptId: "qa_001" },
+  { id: "lc_002", userId: "u_jm", moduleId: "mod_002", completedAt: "2026-05-08T14:00:00Z", quizAttemptId: "qa_002" },
+  { id: "lc_003", userId: "u_jm", moduleId: "mod_003", completedAt: "2026-05-12T11:00:00Z", quizAttemptId: "qa_003" },
+  { id: "lc_004", userId: "u_kn", moduleId: "mod_001", completedAt: "2026-05-07T10:20:00Z", quizAttemptId: "qa_005" },
+];
+
+const CM_QUIZ_ATTEMPTS = [
+  { id: "qa_001", userId: "u_jm", quizId: "qz_mod_001", score: 2, outOf: 2, passed: true,  completedAt: "2026-05-05T09:45:00Z" },
+  { id: "qa_002", userId: "u_jm", quizId: "qz_mod_002", score: 1, outOf: 1, passed: true,  completedAt: "2026-05-08T13:50:00Z" },
+  { id: "qa_003", userId: "u_jm", quizId: "qz_mod_003", score: 1, outOf: 1, passed: true,  completedAt: "2026-05-12T10:55:00Z" },
+  { id: "qa_004", userId: "u_kn", quizId: "qz_mod_001", score: 1, outOf: 2, passed: false, completedAt: "2026-05-06T08:40:00Z" },
+  { id: "qa_005", userId: "u_kn", quizId: "qz_mod_001", score: 2, outOf: 2, passed: true,  completedAt: "2026-05-07T10:15:00Z" },
+  { id: "qa_006", userId: "u_jm", quizId: "qz_course_001", score: null, outOf: null, passed: true,
+    type: "free_response_attestation", attestedAt: "2026-05-14T16:00:00Z" },
+];
+
+const CM_AUTHORITY_UNLOCKS = [
+  { id: "au_001", userId: "u_jm", source: "course_completion", sourceId: "course_001",
+    grantedAt: "2026-05-14T16:01:00Z", authorityBoost: { settlement: 5000, demand: 10000 }, active: true,
+    note: "Unlocked via completion of Auto COB Wisconsin (all modules + capstone attestation)." },
+];
+
+const CM_NOTIFICATIONS = [
+  { id: "cn_001", type: "module_completed", recipientUserId: "u_tr", recipientRole: "SUPERVISOR",
+    relatedUserId: "u_jm", moduleId: "mod_003",
+    message: "J. Mueller completed Chapter 3 (COB Fundamentals) — all 3 modules of Auto COB Wisconsin now complete.",
+    createdAt: "2026-05-12T11:01:00Z", read: false },
+  { id: "cn_002", type: "course_completed", recipientUserId: "u_tr", recipientRole: "SUPERVISOR",
+    relatedUserId: "u_jm", courseId: "course_001",
+    message: "J. Mueller completed Auto COB Wisconsin (all modules + capstone attestation). Authority unlock applied: +$5,000 settlement, +$10,000 demand.",
+    createdAt: "2026-05-14T16:02:00Z", read: false },
+  { id: "cn_003", type: "quiz_failed", recipientUserId: "u_tr", recipientRole: "SUPERVISOR",
+    relatedUserId: "u_kn", quizId: "qz_mod_001",
+    message: "K. Nguyen scored 50% on Chapter 1 Quiz (first attempt). Passed on second attempt (2026-05-07).",
+    createdAt: "2026-05-07T10:16:00Z", read: true },
+  { id: "cn_004", type: "module_completed", recipientUserId: "u_kn", recipientRole: "ANALYST",
+    relatedUserId: "u_kn", moduleId: "mod_001",
+    message: "You completed Chapter 1 — Foundations. Next up: Chapter 2 — Auto Insurance.",
+    createdAt: "2026-05-07T10:16:00Z", read: true },
+];
+
 /* Case state lifecycle — see conversion handoff §11.1. Claims arrive over weeks
    from many providers, so a case progresses through these states as evidence
    accumulates and recovery proceeds. */
@@ -1291,6 +1444,7 @@ const ICONS = {
   building:   "M3 21h18M5 21V7l8-4v18M19 21V11l-6-4",
   chevronDown:"M19 9l-7 7-7-7",
   signOut:    "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h6a2 2 0 012 2v1",
+  book:       "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
 };
 
 const Pill = ({ children, className = "", title }) => (
@@ -1602,9 +1756,17 @@ function App() {
     // Bounce to Dashboard if the new role can't see the current view.
     const onMgmt = view.startsWith("admin"); // historical: admin_overview, admin_team, admin_team_person
     const onAdmin = view.startsWith("sys");  // sys_admin_*
+    const onCm = view === "my_learning" || view === "cm_oversight" || view === "cm_mgmt";
     if (next.role === "ANALYST" && (onMgmt || onAdmin)) setView("dashboard");
     if (next.role === "ADMIN" && onMgmt) setView("dashboard");  // Admin doesn't see Management
     if ((next.role === "SUPERVISOR" || next.role === "MANAGER") && onAdmin) setView("dashboard"); // Supervisor/Manager don't see Admin
+    // CM view bounces: each CM view is role-specific
+    if (onCm) {
+      const allowed = (next.role === "ANALYST" && view === "my_learning") ||
+                      (next.role === "SUPERVISOR" && view === "cm_oversight") ||
+                      (next.role === "MANAGER" && view === "cm_mgmt");
+      if (!allowed) setView("dashboard");
+    }
     return next;
   });
   const roleColor = (role) => {
@@ -1630,16 +1792,19 @@ function App() {
   const recoveries = SAMPLE_RECOVERIES.filter(r => claims.some(c => c.id === r.claimId));
 
   const nav = [
-    { id: "dashboard", label: "Dashboard",       icon: ICONS.dashboard },
-    { id: "intake",    label: "Claims & Triage", icon: ICONS.intake },
-    { id: "cob",       label: "COB Analyzer",    icon: ICONS.cob },
-    { id: "recovery",  label: "Recovery Tracker",icon: ICONS.recovery },
-    { id: "management", label: "Management",     icon: ICONS.user, requiresRole: ["SUPERVISOR", "MANAGER"],
+    { id: "dashboard",   label: "Dashboard",        icon: ICONS.dashboard },
+    { id: "intake",      label: "Claims & Triage",  icon: ICONS.intake },
+    { id: "cob",         label: "COB Analyzer",     icon: ICONS.cob },
+    { id: "recovery",    label: "Recovery Tracker", icon: ICONS.recovery },
+    { id: "my_learning", label: "Learning",         icon: ICONS.book, requiresRole: ["ANALYST"] },
+    { id: "management",  label: "Management",       icon: ICONS.user, requiresRole: ["SUPERVISOR", "MANAGER"],
       children: [
         { id: "admin_overview", label: "Overview" },
         { id: "admin_team",     label: "Team" },
+        ...(currentUser.role === "SUPERVISOR" ? [{ id: "cm_oversight", label: "Learning" }] : []),
+        ...(currentUser.role === "MANAGER"    ? [{ id: "cm_mgmt",      label: "Learning" }] : []),
       ] },
-    { id: "sys_admin", label: "Admin",           icon: ICONS.settings, requiresRole: ["ADMIN"] },
+    { id: "sys_admin",   label: "Admin",            icon: ICONS.settings, requiresRole: ["ADMIN"] },
   ].filter(n => !n.requiresRole || n.requiresRole.includes(currentUser.role));
 
   const go = (v) => { setView(v); setSidebarOpen(false); if (v !== "admin_team_person") setSelectedPersonId(null); };
@@ -1739,7 +1904,10 @@ function App() {
           {view === "admin_team"         && <AdminTeam currentUser={currentUser} openPerson={openPerson} />}
           {view === "admin_team_person"  && <AdminTeamPerson personId={selectedPersonId} currentUser={currentUser} goBack={() => go("admin_team")} openClaim={openClaim} />}
           {view === "sys_admin"          && <SysAdminView tenant={tenant} currentUser={currentUser} />}
-          {view === "claim-detail" && <ClaimDetailView claim={claims.find(c => c.id === selectedClaimId)} claimExtras={claimExtras[selectedClaimId] || { notes:[], tasks:[], activity:[], correspondence:[], records:[] }} onExtraChange={updateClaimExtras} tenant={tenant} currentUser={currentUser} goBack={() => go("intake")} />}
+          {view === "claim-detail"  && <ClaimDetailView claim={claims.find(c => c.id === selectedClaimId)} claimExtras={claimExtras[selectedClaimId] || { notes:[], tasks:[], activity:[], correspondence:[], records:[] }} onExtraChange={updateClaimExtras} tenant={tenant} currentUser={currentUser} goBack={() => go("intake")} />}
+          {view === "my_learning"   && <MyLearningView currentUser={currentUser} />}
+          {view === "cm_oversight"  && <CmOversightView currentUser={currentUser} />}
+          {view === "cm_mgmt"       && <CmMgmtView currentUser={currentUser} />}
         </main>
       </div>
     </div>
@@ -3527,6 +3695,7 @@ function SysAdminView({ tenant, currentUser }) {
     { id: "integrations", label: "Integrations", count: 5 },
     { id: "security",     label: "Security",     count: null },
     { id: "audit",        label: "Audit",        count: SYSTEM_EVENTS.length },
+    { id: "content",      label: "Content",      count: CM_COURSES.length },
     { id: "roadmap",      label: "Roadmap",      count: null },
   ];
 
@@ -3560,6 +3729,7 @@ function SysAdminView({ tenant, currentUser }) {
       {tab === "integrations" && <SysAdminIntegrations showToast={showToast} setDialog={setDialog} />}
       {tab === "security"     && <SysAdminSecurity showToast={showToast} setDialog={setDialog} />}
       {tab === "audit"        && <AdminAudit />}
+      {tab === "content"      && <SysAdminContent showToast={showToast} setDialog={setDialog} />}
       {tab === "roadmap"      && <SysAdminRoadmap />}
 
       <Toast message={toast} onClose={() => setToast("")} />
@@ -5393,6 +5563,987 @@ function TaskRow({ t, onComplete }) {
         </div>
       </div>
     </li>
+  );
+}
+
+/* =========================================================================
+   CONTENT MANAGER COMPONENTS
+   Four surfaces: MyLearningView (Analyst), CmOversightView (Supervisor),
+   CmMgmtView (Manager), SysAdminContent (Admin tab).
+   Sub-components: SlideViewer, McQuizTaker, FrCapstoneTaker.
+   ========================================================================= */
+
+/* ---------- Slide Viewer modal ---------- */
+function SlideViewer({ mod, isComplete, onClose, onMarkComplete }) {
+  const [idx, setIdx] = useState(0);
+  const slides = mod.slides || [];
+  const slide = slides[idx];
+  const isLast = idx === slides.length - 1;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="absolute inset-0 bg-slate-900/50" />
+      <div className="relative bg-white rounded-lg shadow-2xl max-w-2xl w-full flex flex-col fade-in" style={{ maxHeight: "90vh" }}>
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold text-slate-800">{mod.title}</div>
+            <div className="text-xs text-slate-500">Slide {idx + 1} of {slides.length} · ~{mod.estimatedMinutes} min</div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded">
+            <Icon d={ICONS.close} className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-6 flex-1 overflow-y-auto">
+          {slide ? (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-slate-800">{slide.heading}</h2>
+              <p className="text-base text-slate-700 leading-relaxed">{slide.body}</p>
+            </div>
+          ) : <div className="text-sm text-slate-400">No slides.</div>}
+        </div>
+        <div className="h-1 bg-slate-200">
+          <div className="h-1 bg-brand-500 transition-all" style={{ width: `${((idx + 1) / slides.length) * 100}%` }} />
+        </div>
+        <div className="px-5 py-3 border-t border-slate-100 flex justify-between items-center">
+          <button onClick={() => setIdx(i => i - 1)} disabled={idx === 0}
+            className={`text-sm px-3 py-1.5 border rounded-md ${idx === 0 ? "border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>
+            ← Previous
+          </button>
+          <span className="text-xs text-slate-500">{idx + 1} / {slides.length}</span>
+          {isLast ? (
+            !isComplete ? (
+              <button onClick={onMarkComplete}
+                className="text-sm px-3 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+                Mark reading complete →
+              </button>
+            ) : (
+              <button onClick={onClose}
+                className="text-sm px-3 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">
+                Close
+              </button>
+            )
+          ) : (
+            <button onClick={() => setIdx(i => i + 1)}
+              className="text-sm px-3 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+              Next →
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- MC Quiz Taker modal ---------- */
+function McQuizTaker({ quiz, previousBest, onClose, onPass, onFail }) {
+  const [answers, setAnswers] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [score, setScore] = useState(0);
+  const questions = quiz.questions || [];
+  const allAnswered = questions.every(q => answers[q.id] != null);
+  const handleSubmit = () => {
+    if (!allAnswered) return;
+    const correct = questions.filter(q => answers[q.id] === q.answer).length;
+    setScore(correct);
+    setSubmitted(true);
+  };
+  const passed = submitted && (score / questions.length) >= 0.70;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+         onClick={e => { if (e.target === e.currentTarget && !submitted) onClose(); }}>
+      <div className="absolute inset-0 bg-slate-900/50" />
+      <div className="relative bg-white rounded-lg shadow-2xl max-w-2xl w-full flex flex-col fade-in" style={{ maxHeight: "90vh" }}>
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold text-slate-800">{quiz.title}</div>
+            <div className="text-xs text-slate-500">{questions.length} question{questions.length !== 1 ? "s" : ""} · 70% to pass</div>
+          </div>
+          {!submitted && (
+            <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded">
+              <Icon d={ICONS.close} className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+          {!submitted ? (
+            questions.map((q, qi) => (
+              <div key={q.id} className="space-y-3">
+                <div>
+                  <div className="text-sm font-medium text-slate-800">Q{qi + 1}. {q.stem}</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wide">Tier: {q.tier}</div>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(q.options).map(([key, text]) => (
+                    <label key={key}
+                      className={`flex items-start gap-2.5 p-2.5 rounded-md border cursor-pointer ${answers[q.id] === key ? "border-brand-400 bg-brand-50" : "border-slate-200 hover:bg-slate-50"}`}>
+                      <input type="radio" name={q.id} value={key} checked={answers[q.id] === key}
+                        onChange={() => setAnswers(a => ({ ...a, [q.id]: key }))}
+                        className="mt-0.5 text-brand-600 shrink-0" />
+                      <span className="text-sm text-slate-800"><span className="font-mono text-slate-400">{key}.</span> {text}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="space-y-4">
+              <div className={`text-center py-5 rounded-lg ${passed ? "bg-emerald-50 border border-emerald-200" : "bg-rose-50 border border-rose-200"}`}>
+                <div className={`text-3xl font-bold ${passed ? "text-emerald-800" : "text-rose-800"}`}>{score} / {questions.length}</div>
+                <div className={`text-sm mt-1 font-medium ${passed ? "text-emerald-700" : "text-rose-700"}`}>{passed ? "Passed ✓" : "Not passed — review the reading and try again"}</div>
+                {previousBest?.passed && !passed && (
+                  <div className="text-xs text-slate-500 mt-1">Your previous passing attempt still counts.</div>
+                )}
+              </div>
+              {questions.map((q, qi) => {
+                const userAns = answers[q.id];
+                const correct = userAns === q.answer;
+                return (
+                  <div key={q.id} className={`rounded-md p-3 border text-xs ${correct ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}>
+                    <div className="font-medium text-slate-800 mb-1">Q{qi + 1}. {q.stem}</div>
+                    <div className={correct ? "text-emerald-700" : "text-rose-700"}>
+                      Your answer: <span className="font-mono">{userAns}</span>. {q.options[userAns]}
+                    </div>
+                    {!correct && (
+                      <div className="text-slate-700 mt-1">
+                        Correct: <span className="font-mono">{q.answer}</span>. {q.options[q.answer]}
+                      </div>
+                    )}
+                    <div className="text-slate-600 mt-1 italic">Rationale: {q.rationale}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="px-5 py-3 border-t border-slate-100 flex justify-end gap-2">
+          {!submitted ? (
+            <>
+              <button onClick={onClose}
+                className="text-sm px-3 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">Cancel</button>
+              <button onClick={handleSubmit} disabled={!allAnswered}
+                className={`text-sm px-3 py-1.5 text-white rounded-md ${allAnswered ? "bg-brand-600 hover:bg-brand-700" : "bg-slate-300 cursor-not-allowed"}`}>
+                Submit
+              </button>
+            </>
+          ) : (
+            <button onClick={() => passed ? onPass(score, questions.length) : onFail(score, questions.length)}
+              className="text-sm px-3 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+              {passed ? "Continue →" : "Close"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- FR Capstone Taker modal ---------- */
+function FrCapstoneTaker({ quiz, alreadyPassed, onClose, onAttest }) {
+  const [expanded, setExpanded] = useState({});
+  const scenarios = quiz.scenarios || [];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="absolute inset-0 bg-slate-900/50" />
+      <div className="relative bg-white rounded-lg shadow-2xl max-w-3xl w-full flex flex-col fade-in" style={{ maxHeight: "90vh" }}>
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold text-slate-800">{quiz.title}</div>
+            <div className="text-xs text-slate-500">Free-response capstone · work through each scenario, then attest</div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded">
+            <Icon d={ICONS.close} className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+          {scenarios.map(sc => (
+            <div key={sc.id} className="space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-slate-800">{sc.title}</span>
+                <Pill className="bg-slate-100 text-slate-700">Covers {sc.covers}</Pill>
+                <Pill className="bg-blue-100 text-blue-800">~{sc.estimatedMinutes} min</Pill>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-md p-3">
+                <div className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold mb-1.5">Facts</div>
+                <p className="text-sm text-slate-700 leading-relaxed">{sc.facts}</p>
+              </div>
+              <div className="space-y-2">
+                <div className="text-[10px] uppercase tracking-wide text-slate-500 font-semibold">Prompts</div>
+                {sc.prompts.map((p, i) => (
+                  <div key={i} className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-700">
+                    <span className="font-semibold text-slate-500 mr-1">{i + 1}.</span>{p}
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setExpanded(e => ({ ...e, [sc.id]: !e[sc.id] }))}
+                className="text-xs text-brand-700 hover:underline">
+                {expanded[sc.id] ? "Hide model answer ↑" : "Show model answer ↓ (read after attempting)"}
+              </button>
+              {expanded[sc.id] && (
+                <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                  <div className="text-[10px] uppercase tracking-wide text-amber-800 font-semibold mb-1.5">Model answer walkthrough</div>
+                  <pre className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed font-sans">{sc.modelAnswer}</pre>
+                </div>
+              )}
+            </div>
+          ))}
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-sm text-blue-800">
+            <div className="font-semibold mb-1">Self-attestation</div>
+            <div className="text-xs">By attesting below, you confirm you have reviewed the facts, attempted each prompt independently, and read the model answer walkthrough. This attestation is recorded in your learning record and triggers the authority unlock for this course.</div>
+          </div>
+        </div>
+        <div className="px-5 py-3 border-t border-slate-100 flex justify-end gap-2">
+          <button onClick={onClose}
+            className="text-sm px-3 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">Close</button>
+          {!alreadyPassed ? (
+            <button onClick={onAttest}
+              className="text-sm px-3 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+              I have completed this scenario — Attest ✓
+            </button>
+          ) : (
+            <span className="text-sm text-emerald-700 font-medium px-3 py-1.5">Already attested ✓</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- My Learning (Analyst) ---------- */
+function MyLearningView({ currentUser }) {
+  const [selectedModId, setSelectedModId] = useState(null);
+  const [activeQuizId, setActiveQuizId] = useState(null);
+  const [showCapstone, setShowCapstone] = useState(false);
+  const [toast, setToast] = useState("");
+  // Local session state for completions and attempts added during this session
+  const [localCompletions, setLocalCompletions] = useState([]);
+  const [localAttempts, setLocalAttempts] = useState([]);
+  const showToast = (msg) => setToast(msg);
+
+  const allCompletions = [...CM_LESSON_COMPLETIONS, ...localCompletions];
+  const allAttempts = [...CM_QUIZ_ATTEMPTS, ...localAttempts];
+
+  const enrollment = CM_ENROLLMENTS.find(e => e.userId === currentUser.id);
+  if (!enrollment) return (
+    <div className="space-y-4 fade-in">
+      <h1 className="text-2xl font-semibold text-slate-800">My Learning</h1>
+      <p className="text-sm text-slate-500">No courses assigned yet. Contact your supervisor to be enrolled in a learning sequence.</p>
+    </div>
+  );
+
+  const sequence  = CM_SEQUENCES.find(s => s.id === enrollment.sequenceId);
+  const course    = sequence ? CM_COURSES.find(c => c.id === sequence.courseIds[0]) : null;
+  const modules   = course ? CM_MODULES.filter(m => m.courseId === course.id).sort((a, b) => a.order - b.order) : [];
+
+  const isModComplete = (modId) => allCompletions.some(lc => lc.moduleId === modId && lc.userId === currentUser.id);
+  const getLatestAttempt = (quizId) => allAttempts.filter(qa => qa.quizId === quizId && qa.userId === currentUser.id)
+    .sort((a, b) => (b.completedAt || b.attestedAt || "").localeCompare(a.completedAt || a.attestedAt || "")).at(0);
+
+  const completedCount = modules.filter(m => isModComplete(m.id)).length;
+  const allModsDone    = modules.length > 0 && modules.every(m => isModComplete(m.id));
+  const capstonePassed = getLatestAttempt(CM_COURSE_QUIZ.id)?.passed === true;
+  const unlock         = CM_AUTHORITY_UNLOCKS.find(au => au.userId === currentUser.id && au.active);
+  const progressPct    = modules.length > 0 ? Math.round((completedCount / modules.length) * 100) : 0;
+
+  const selectedMod  = modules.find(m => m.id === selectedModId);
+  const activeQuiz   = CM_MODULE_QUIZZES.find(q => q.id === activeQuizId);
+
+  const handleMarkComplete = (modId) => {
+    setLocalCompletions(prev => [...prev, {
+      id: `lc_local_${Date.now()}`, userId: currentUser.id, moduleId: modId,
+      completedAt: new Date().toISOString(), quizAttemptId: null,
+    }]);
+    const mod = modules.find(m => m.id === modId);
+    showToast(`${mod?.title || "Module"} — reading marked complete`);
+    setSelectedModId(null);
+  };
+
+  const handleQuizPass = (quizId, score, total) => {
+    const quiz = CM_MODULE_QUIZZES.find(q => q.id === quizId);
+    const modId = quiz?.moduleId;
+    setLocalAttempts(prev => [...prev, {
+      id: `qa_local_${Date.now()}`, userId: currentUser.id, quizId,
+      score, outOf: total, passed: true, completedAt: new Date().toISOString(),
+    }]);
+    if (modId && !isModComplete(modId)) {
+      setLocalCompletions(prev => [...prev, {
+        id: `lc_local_${Date.now()}`, userId: currentUser.id, moduleId: modId,
+        completedAt: new Date().toISOString(), quizAttemptId: `qa_local_${Date.now()}`,
+      }]);
+    }
+    const mod = CM_MODULES.find(m => m.id === modId);
+    showToast(`Quiz passed: ${score}/${total} · ${mod?.title || "module"} complete`);
+    setActiveQuizId(null);
+  };
+
+  const handleQuizFail = (quizId, score, total) => {
+    setLocalAttempts(prev => [...prev, {
+      id: `qa_local_${Date.now()}`, userId: currentUser.id, quizId,
+      score, outOf: total, passed: false, completedAt: new Date().toISOString(),
+    }]);
+    showToast(`Quiz: ${score}/${total} — review the reading and try again`);
+    setActiveQuizId(null);
+  };
+
+  const handleAttest = () => {
+    setLocalAttempts(prev => [...prev, {
+      id: `qa_local_${Date.now()}`, userId: currentUser.id, quizId: CM_COURSE_QUIZ.id,
+      score: null, outOf: null, passed: true, type: "free_response_attestation",
+      attestedAt: new Date().toISOString(),
+    }]);
+    showToast("Capstone attestation recorded · course complete · authority unlock applied");
+    setShowCapstone(false);
+  };
+
+  return (
+    <div className="space-y-4 fade-in">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-800">My Learning</h1>
+        <p className="text-sm text-slate-500">Enrolled courses, module progress, and authority unlocks.</p>
+      </div>
+
+      {/* Enrollment / progress card */}
+      <div className="bg-white border border-slate-200 rounded-lg p-5">
+        <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
+          <div>
+            <div className="text-sm font-semibold text-slate-800">{sequence?.title}</div>
+            <div className="text-xs text-slate-500 mt-0.5">{course?.title} · {modules.length} modules · ~{course?.estimatedHours}h estimated</div>
+          </div>
+          <Pill className={allModsDone && capstonePassed ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800"}>
+            {allModsDone && capstonePassed ? "Complete" : "In progress"}
+          </Pill>
+        </div>
+        <div className="text-xs text-slate-500 mb-1">{completedCount} of {modules.length} modules complete</div>
+        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-2 bg-brand-500 rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+        </div>
+        {(unlock || (capstonePassed && !unlock)) && (
+          <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 text-xs text-emerald-800 flex items-center gap-2">
+            <Icon d={ICONS.check} className="w-4 h-4 text-emerald-500 shrink-0" />
+            Authority unlock: +{fmtMoney((unlock || sequence?.unlockOnCompletion)?.authorityBoost?.settlement ?? 5000)} settlement · +{fmtMoney((unlock || sequence?.unlockOnCompletion)?.authorityBoost?.demand ?? 10000)} demand
+          </div>
+        )}
+      </div>
+
+      {/* Module list */}
+      <div className="space-y-2">
+        {modules.map((mod, idx) => {
+          const complete = isModComplete(mod.id);
+          const quiz = CM_MODULE_QUIZZES.find(q => q.moduleId === mod.id);
+          const latestAttempt = quiz ? getLatestAttempt(quiz.id) : null;
+          const quizPassed = latestAttempt?.passed === true;
+          const prevDone = idx === 0 || isModComplete(modules[idx - 1]?.id);
+          const locked = !prevDone && !complete;
+          return (
+            <div key={mod.id} className={`bg-white border rounded-lg p-4 transition-opacity ${locked ? "opacity-50" : ""} ${complete ? "border-emerald-200" : "border-slate-200"}`}>
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 ${complete ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
+                    {complete ? <Icon d={ICONS.check} className="w-4 h-4 text-emerald-600" /> : <span>{idx + 1}</span>}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-slate-800">{mod.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{(mod.slides || []).length} slides · ~{mod.estimatedMinutes} min</div>
+                    {latestAttempt && (
+                      <div className={`text-xs mt-1 ${quizPassed ? "text-emerald-700" : "text-rose-700"}`}>
+                        Quiz: {latestAttempt.score}/{latestAttempt.outOf} · {quizPassed ? "Passed" : "Not passed yet"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2 items-center flex-wrap">
+                  <button
+                    onClick={() => !locked && setSelectedModId(mod.id)}
+                    disabled={locked}
+                    className={`text-xs px-2.5 py-1.5 rounded-md border ${locked ? "border-slate-200 text-slate-400 cursor-not-allowed" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>
+                    {complete ? "Review slides" : "Start reading"}
+                  </button>
+                  {quiz && !locked && (
+                    <button
+                      onClick={() => setActiveQuizId(quiz.id)}
+                      className={`text-xs px-2.5 py-1.5 rounded-md ${quizPassed ? "border border-emerald-300 text-emerald-700 hover:bg-emerald-50" : "bg-brand-600 text-white hover:bg-brand-700"}`}>
+                      {quizPassed ? "Retake quiz" : "Take quiz"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Capstone — only shown after all modules done */}
+      {allModsDone && (
+        <div className={`bg-white border rounded-lg p-4 ${capstonePassed ? "border-emerald-200 bg-emerald-50" : "border-brand-300 bg-brand-50"}`}>
+          <div className="flex items-start justify-between gap-3 flex-wrap">
+            <div>
+              <div className="text-sm font-semibold text-slate-800">{CM_COURSE_QUIZ.title}</div>
+              <div className="text-xs text-slate-500 mt-0.5">Course capstone · self-attestation required · ~{CM_COURSE_QUIZ.scenarios[0]?.estimatedMinutes} min</div>
+              {capstonePassed && <div className="text-xs text-emerald-700 mt-1">Completed · authority unlock applied ✓</div>}
+            </div>
+            <button onClick={() => setShowCapstone(true)}
+              className={`text-xs px-2.5 py-1.5 rounded-md ${capstonePassed ? "border border-slate-300 text-slate-700 hover:bg-slate-50" : "bg-brand-600 text-white hover:bg-brand-700"}`}>
+              {capstonePassed ? "Review capstone" : "Begin capstone"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <Toast message={toast} onClose={() => setToast("")} />
+      {selectedMod && (
+        <SlideViewer
+          mod={selectedMod}
+          isComplete={isModComplete(selectedMod.id)}
+          onClose={() => setSelectedModId(null)}
+          onMarkComplete={() => handleMarkComplete(selectedMod.id)}
+        />
+      )}
+      {activeQuiz && (
+        <McQuizTaker
+          quiz={activeQuiz}
+          previousBest={getLatestAttempt(activeQuiz.id)}
+          onClose={() => setActiveQuizId(null)}
+          onPass={(score, total) => handleQuizPass(activeQuiz.id, score, total)}
+          onFail={(score, total) => handleQuizFail(activeQuiz.id, score, total)}
+        />
+      )}
+      {showCapstone && (
+        <FrCapstoneTaker
+          quiz={CM_COURSE_QUIZ}
+          alreadyPassed={capstonePassed}
+          onClose={() => setShowCapstone(false)}
+          onAttest={handleAttest}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ---------- Learning Oversight (Supervisor) ---------- */
+function CmOversightView({ currentUser }) {
+  const [toast, setToast] = useState("");
+  const showToast = (msg) => setToast(msg);
+
+  const supervisorUser = USERS.find(u => u.id === currentUser.id);
+  const teamId = supervisorUser?.teamId;
+  const teamAnalysts = USERS.filter(u => u.teamId === teamId && (u.role === "ANALYST" || u.role === "SENIOR_ANALYST"));
+  const myNotifs = CM_NOTIFICATIONS.filter(n => n.recipientUserId === currentUser.id || n.recipientRole === "SUPERVISOR");
+  const unreadCount = myNotifs.filter(n => !n.read).length;
+
+  return (
+    <div className="space-y-4 fade-in">
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-800">Learning Oversight</h1>
+          <p className="text-sm text-slate-500">Track analyst progress through assigned sequences and respond to learning notifications.</p>
+        </div>
+        {unreadCount > 0 && <Pill className="bg-blue-100 text-blue-800">{unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}</Pill>}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Analyst progress */}
+        <div className="lg:col-span-2 space-y-3">
+          <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Team Progress</div>
+          {teamAnalysts.length === 0 && (
+            <div className="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-4">No analysts on your team.</div>
+          )}
+          {teamAnalysts.map(analyst => {
+            const enr = CM_ENROLLMENTS.find(e => e.userId === analyst.id);
+            const seq = enr ? CM_SEQUENCES.find(s => s.id === enr.sequenceId) : null;
+            const course = seq ? CM_COURSES.find(c => c.id === seq.courseIds[0]) : null;
+            const mods = course ? CM_MODULES.filter(m => m.courseId === course.id) : [];
+            const completedMods = mods.filter(m => CM_LESSON_COMPLETIONS.some(lc => lc.userId === analyst.id && lc.moduleId === m.id)).length;
+            const pct = mods.length > 0 ? Math.round((completedMods / mods.length) * 100) : 0;
+            const capstoneDone = CM_QUIZ_ATTEMPTS.some(qa => qa.userId === analyst.id && qa.quizId === CM_COURSE_QUIZ.id && qa.passed);
+            const unlock = CM_AUTHORITY_UNLOCKS.find(au => au.userId === analyst.id && au.active);
+            const level = JOB_LEVELS.find(l => l.id === analyst.level);
+            return (
+              <div key={analyst.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 text-[10px] font-semibold flex items-center justify-center">{analyst.initials}</div>
+                    <div>
+                      <div className="text-sm font-medium text-slate-800">{analyst.name}</div>
+                      {level && <Pill className={`${level.color} text-[10px] mt-0.5`}>{level.label}</Pill>}
+                    </div>
+                  </div>
+                  <div className="text-right text-xs">
+                    {enr ? <div className="text-slate-500 truncate max-w-[160px]">{seq?.title || "Enrolled"}</div> : <div className="text-slate-400 italic">Not enrolled</div>}
+                    {unlock && <Pill className="bg-emerald-100 text-emerald-800 mt-1">Authority unlocked</Pill>}
+                  </div>
+                </div>
+                {enr && mods.length > 0 ? (
+                  <div>
+                    <div className="flex justify-between text-xs text-slate-500 mb-1">
+                      <span>{completedMods}/{mods.length} modules</span>
+                      <span>{pct}%</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden mb-2">
+                      <div className="h-1.5 bg-brand-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${mods.length}, minmax(0, 1fr))` }}>
+                      {mods.map((m, i) => {
+                        const done = CM_LESSON_COMPLETIONS.some(lc => lc.userId === analyst.id && lc.moduleId === m.id);
+                        const quiz = CM_MODULE_QUIZZES.find(q => q.moduleId === m.id);
+                        const qPassed = quiz ? CM_QUIZ_ATTEMPTS.some(qa => qa.userId === analyst.id && qa.quizId === quiz.id && qa.passed) : true;
+                        return (
+                          <div key={m.id} title={m.title}
+                            className={`rounded px-1.5 py-1 text-center text-[10px] truncate ${done && qPassed ? "bg-emerald-100 text-emerald-800" : done ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-500"}`}>
+                            Ch.{i + 1}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {capstoneDone && <div className="text-xs text-emerald-700 mt-2 font-medium">Capstone attested ✓</div>}
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-400 italic">Not enrolled in any sequence.</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Notifications */}
+        <div className="space-y-3">
+          <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Learning Notifications</div>
+          {myNotifs.length === 0 ? (
+            <div className="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-4">No notifications.</div>
+          ) : (
+            <div className="space-y-2">
+              {myNotifs.map(n => {
+                const typeColor = n.type === "course_completed" ? "bg-emerald-100 text-emerald-800" :
+                                  n.type === "quiz_failed" ? "bg-rose-100 text-rose-800" : "bg-blue-100 text-blue-800";
+                const typeLabel = n.type === "course_completed" ? "Course complete" :
+                                  n.type === "quiz_failed" ? "Quiz failed" : "Module complete";
+                const who = USERS.find(u => u.id === n.relatedUserId);
+                return (
+                  <div key={n.id} className={`bg-white border rounded-lg p-3 ${!n.read ? "border-blue-200" : "border-slate-200 opacity-75"}`}>
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <Pill className={`${typeColor} text-[10px]`}>{typeLabel}</Pill>
+                      <span className="text-[10px] text-slate-500">{n.createdAt.slice(0, 10)}</span>
+                    </div>
+                    <div className="text-xs text-slate-700">{n.message}</div>
+                    {who && <div className="text-[10px] text-slate-500 mt-1">{who.name}</div>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {myNotifs.some(n => !n.read) && (
+            <button onClick={() => showToast("All notifications marked as read (prototype)")}
+              className="text-xs text-brand-700 hover:underline">Mark all read</button>
+          )}
+        </div>
+      </div>
+
+      <Toast message={toast} onClose={() => setToast("")} />
+    </div>
+  );
+}
+
+/* ---------- Learning Management (Manager) ---------- */
+function CmMgmtView({ currentUser }) {
+  const [tab, setTab] = useState("assignments");
+  const [toast, setToast] = useState("");
+  const [dialog, setDialog] = useState(null);
+  const showToast = (msg) => setToast(msg);
+  const allAnalysts = USERS.filter(u => u.role === "ANALYST" || u.role === "SENIOR_ANALYST");
+
+  const TABS = [
+    { id: "assignments", label: "Assignments" },
+    { id: "sequences",   label: "Sequences"   },
+    { id: "progress",    label: "Team Progress" },
+  ];
+
+  return (
+    <div className="space-y-4 fade-in">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-800">Learning Management</h1>
+        <p className="text-sm text-slate-500">Assign sequences to analysts, track team progress, and review course-completion authority unlocks.</p>
+      </div>
+
+      <div className="border-b border-slate-200 -mx-2 sm:-mx-4 px-2 sm:px-4 overflow-x-auto">
+        <div className="flex gap-1 min-w-max">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`text-sm px-3 py-2 border-b-2 transition-colors whitespace-nowrap ${tab === t.id ? "border-brand-600 text-brand-700 font-medium" : "border-transparent text-slate-600 hover:text-slate-800"}`}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === "assignments" && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="text-xs text-slate-500">{CM_ENROLLMENTS.length} active enrollment{CM_ENROLLMENTS.length !== 1 ? "s" : ""}</div>
+            <button onClick={() => setDialog({
+              title: "Enroll analyst in sequence",
+              description: "Assign a learning sequence to an analyst. They will see the course in their Learning tab and receive module-completion notifications.",
+              fields: [
+                { name: "userId", label: "Analyst", type: "select", required: true,
+                  defaultValue: allAnalysts[0]?.id || "",
+                  options: allAnalysts.map(u => ({ value: u.id, label: u.name })) },
+                { name: "sequenceId", label: "Sequence", type: "select", required: true,
+                  defaultValue: CM_SEQUENCES[0]?.id || "",
+                  options: CM_SEQUENCES.map(s => ({ value: s.id, label: s.title })) },
+              ],
+              submitLabel: "Enroll",
+              onSubmit: ({ userId, sequenceId }) => {
+                const u = allAnalysts.find(a => a.id === userId);
+                const s = CM_SEQUENCES.find(sq => sq.id === sequenceId);
+                showToast(`${u?.name || "Analyst"} enrolled in "${s?.title || "sequence"}" · notification sent`);
+              },
+            })} className="text-xs px-2.5 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+              + Enroll analyst
+            </button>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="text-left px-3 py-2 font-medium">Analyst</th>
+                  <th className="text-left px-3 py-2 font-medium">Sequence</th>
+                  <th className="text-left px-3 py-2 font-medium">Enrolled</th>
+                  <th className="text-left px-3 py-2 font-medium">Progress</th>
+                  <th className="text-left px-3 py-2 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {CM_ENROLLMENTS.map(enr => {
+                  const user = USERS.find(u => u.id === enr.userId);
+                  const seq = CM_SEQUENCES.find(s => s.id === enr.sequenceId);
+                  const course = seq ? CM_COURSES.find(c => c.id === seq.courseIds[0]) : null;
+                  const mods = course ? CM_MODULES.filter(m => m.courseId === course.id) : [];
+                  const completedMods = mods.filter(m => CM_LESSON_COMPLETIONS.some(lc => lc.userId === enr.userId && lc.moduleId === m.id)).length;
+                  const pct = mods.length > 0 ? Math.round((completedMods / mods.length) * 100) : 0;
+                  const capstoneDone = CM_QUIZ_ATTEMPTS.some(qa => qa.userId === enr.userId && qa.quizId === CM_COURSE_QUIZ.id && qa.passed);
+                  return (
+                    <tr key={enr.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-semibold">{user?.initials}</div>
+                          <span className="text-slate-800">{user?.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-slate-700 max-w-[180px] truncate">{seq?.title || "—"}</td>
+                      <td className="px-3 py-2 text-xs text-slate-500 tabular-nums">{enr.enrolledAt.slice(0, 10)}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs">
+                          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden w-16">
+                            <div className="h-1.5 bg-brand-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-slate-600 tabular-nums">{pct}%</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <Pill className={capstoneDone ? "bg-emerald-100 text-emerald-800" : pct > 0 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-700"}>
+                          {capstoneDone ? "Complete" : pct > 0 ? "In progress" : "Not started"}
+                        </Pill>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === "sequences" && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="text-xs text-slate-500">{CM_SEQUENCES.length} sequence{CM_SEQUENCES.length !== 1 ? "s" : ""}</div>
+            <button onClick={() => showToast("Sequence creation — Phase 2 ships the full editor")}
+              className="text-xs px-2.5 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">+ New sequence (Phase 2)</button>
+          </div>
+          {CM_SEQUENCES.map(seq => {
+            const enrolledCount = CM_ENROLLMENTS.filter(e => e.sequenceId === seq.id).length;
+            const completedCount2 = CM_ENROLLMENTS.filter(e => e.sequenceId === seq.id && e.status === "completed").length;
+            const course = CM_COURSES.find(c => c.id === seq.courseIds[0]);
+            return (
+              <div key={seq.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-800">{seq.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{seq.description}</div>
+                    <div className="text-xs text-slate-500 mt-1">Target: {seq.targetRole} · Courses: {seq.courseIds.length} · {enrolledCount} enrolled · {completedCount2} completed</div>
+                    {seq.unlockOnCompletion && (
+                      <div className="text-xs text-amber-700 mt-1">
+                        Completion unlock: +{fmtMoney(seq.unlockOnCompletion.authorityBoost.settlement)} settlement · +{fmtMoney(seq.unlockOnCompletion.authorityBoost.demand)} demand
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Pill className="bg-emerald-100 text-emerald-800">Published</Pill>
+                    <Pill className="bg-slate-100 text-slate-700">{seq.targetRole}</Pill>
+                  </div>
+                </div>
+                {course && (
+                  <div className="mt-3 border-t border-slate-100 pt-2 text-xs text-slate-600">
+                    Course: <span className="font-medium text-slate-800">{course.title}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab === "progress" && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Kpi label="Enrolled"         value={CM_ENROLLMENTS.length}                                accent="bg-blue-50 text-blue-700" />
+            <Kpi label="Modules complete" value={CM_LESSON_COMPLETIONS.length}                        accent="bg-brand-50 text-brand-700" />
+            <Kpi label="Quizzes passed"   value={CM_QUIZ_ATTEMPTS.filter(qa => qa.passed).length}    accent="bg-emerald-50 text-emerald-700" />
+            <Kpi label="Auth unlocks"     value={CM_AUTHORITY_UNLOCKS.length}                         accent="bg-amber-50 text-amber-700" />
+          </div>
+          <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="text-left px-3 py-2 font-medium">Analyst</th>
+                  <th className="text-left px-3 py-2 font-medium">Course</th>
+                  <th className="text-right px-3 py-2 font-medium">Modules</th>
+                  <th className="text-left px-3 py-2 font-medium">Capstone</th>
+                  <th className="text-left px-3 py-2 font-medium">Unlock</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allAnalysts.map(analyst => {
+                  const enr = CM_ENROLLMENTS.find(e => e.userId === analyst.id);
+                  const seq = enr ? CM_SEQUENCES.find(s => s.id === enr.sequenceId) : null;
+                  const course = seq ? CM_COURSES.find(c => c.id === seq.courseIds[0]) : null;
+                  const mods = course ? CM_MODULES.filter(m => m.courseId === course.id) : [];
+                  const completedMods = mods.filter(m => CM_LESSON_COMPLETIONS.some(lc => lc.userId === analyst.id && lc.moduleId === m.id)).length;
+                  const capstoneDone = CM_QUIZ_ATTEMPTS.some(qa => qa.userId === analyst.id && qa.quizId === CM_COURSE_QUIZ.id && qa.passed);
+                  const unlock = CM_AUTHORITY_UNLOCKS.find(au => au.userId === analyst.id && au.active);
+                  return (
+                    <tr key={analyst.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-[10px] font-semibold">{analyst.initials}</div>
+                          <span className="text-slate-800">{analyst.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-slate-600 max-w-[160px] truncate">{course?.title || <span className="italic text-slate-400">Not enrolled</span>}</td>
+                      <td className="px-3 py-2 text-xs text-right tabular-nums text-slate-700">{enr ? `${completedMods}/${mods.length}` : "—"}</td>
+                      <td className="px-3 py-2">{enr ? (capstoneDone ? <Pill className="bg-emerald-100 text-emerald-800">Attested</Pill> : <Pill className="bg-slate-100 text-slate-700">Pending</Pill>) : <span className="text-xs text-slate-400">—</span>}</td>
+                      <td className="px-3 py-2">{unlock ? <Pill className="bg-amber-100 text-amber-800">Unlocked</Pill> : <span className="text-xs text-slate-400">—</span>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <Toast message={toast} onClose={() => setToast("")} />
+      <Dialog config={dialog} onClose={() => setDialog(null)} />
+    </div>
+  );
+}
+
+/* ---------- Content Manager (Admin tab) ---------- */
+function SysAdminContent({ showToast }) {
+  const [tab, setTab] = useState("courses");
+  const TABS = [
+    { id: "courses",   label: "Courses",   count: CM_COURSES.length },
+    { id: "modules",   label: "Modules",   count: CM_MODULES.length },
+    { id: "sequences", label: "Sequences", count: CM_SEQUENCES.length },
+    { id: "quizzes",   label: "Quizzes",   count: CM_MODULE_QUIZZES.length + 1 },
+  ];
+  return (
+    <div className="space-y-4">
+      <div className="text-xs text-slate-500">Platform-level content management. Courses, modules, and sequences here are visible to all tenants when the Content Manager feature flag is active. Customer-specific content (Manager-authored) is tenant-scoped.</div>
+      <div className="border-b border-slate-200 overflow-x-auto -mx-2 px-2">
+        <div className="flex gap-1 min-w-max">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`text-xs px-3 py-2 border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${tab === t.id ? "border-brand-600 text-brand-700 font-medium" : "border-transparent text-slate-600 hover:text-slate-800"}`}>
+              {t.label}
+              <span className={`text-[10px] px-1 rounded-full ${tab === t.id ? "bg-brand-100 text-brand-700" : "bg-slate-200 text-slate-600"}`}>{t.count}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === "courses" && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="text-xs text-slate-500">Platform-authored courses available to all tenants.</div>
+            <button onClick={() => showToast("Course creation — Phase 2 ships the full slide+quiz editor")}
+              className="text-xs px-2.5 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">+ New course (Phase 2)</button>
+          </div>
+          {CM_COURSES.map(course => {
+            const mods = CM_MODULES.filter(m => m.courseId === course.id);
+            const enrolled = CM_ENROLLMENTS.length;
+            return (
+              <div key={course.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-800">{course.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{course.description}</div>
+                    <div className="text-xs text-slate-500 mt-1">~{course.estimatedHours}h · {mods.length} modules · {course.tier} tier · Published {course.publishedAt}</div>
+                  </div>
+                  <div className="flex gap-2 items-center flex-wrap shrink-0">
+                    <Pill className="bg-emerald-100 text-emerald-800">{course.status}</Pill>
+                    <span className="text-xs text-slate-500">{enrolled} enrolled</span>
+                    <button onClick={() => showToast(`Edit "${course.title}" — Phase 2 ships the slide/quiz editor`)}
+                      className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50">Edit</button>
+                  </div>
+                </div>
+                <div className="mt-3 border-t border-slate-100 pt-3 space-y-1">
+                  <div className="text-xs text-slate-500 font-semibold uppercase mb-1">Modules ({mods.length})</div>
+                  {mods.map(m => (
+                    <div key={m.id} className="flex items-center justify-between text-xs text-slate-700">
+                      <span>{m.order}. {m.title}</span>
+                      <span className="text-slate-500 shrink-0 ml-4">{(m.slides || []).length} slides · {m.estimatedMinutes}m</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab === "modules" && (
+        <div className="space-y-3">
+          <div className="text-xs text-slate-500">{CM_MODULES.length} modules across {CM_COURSES.length} course{CM_COURSES.length !== 1 ? "s" : ""}.</div>
+          <div className="bg-white border border-slate-200 rounded-lg overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="text-left px-3 py-2 font-medium">#</th>
+                  <th className="text-left px-3 py-2 font-medium">Module</th>
+                  <th className="text-left px-3 py-2 font-medium">Course</th>
+                  <th className="text-right px-3 py-2 font-medium">Slides</th>
+                  <th className="text-right px-3 py-2 font-medium">Est.</th>
+                  <th className="text-left px-3 py-2 font-medium">Status</th>
+                  <th className="text-left px-3 py-2 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {CM_MODULES.map(m => {
+                  const course = CM_COURSES.find(c => c.id === m.courseId);
+                  const quiz = CM_MODULE_QUIZZES.find(q => q.moduleId === m.id);
+                  return (
+                    <tr key={m.id} className="border-t border-slate-100">
+                      <td className="px-3 py-2 text-xs text-slate-500">{m.order}</td>
+                      <td className="px-3 py-2 text-slate-800 max-w-[220px]"><div className="truncate">{m.title}</div></td>
+                      <td className="px-3 py-2 text-xs text-slate-600 max-w-[160px]"><div className="truncate">{course?.title || "—"}</div></td>
+                      <td className="px-3 py-2 text-xs text-right tabular-nums text-slate-700">{(m.slides || []).length}</td>
+                      <td className="px-3 py-2 text-xs text-right tabular-nums text-slate-500">{m.estimatedMinutes}m</td>
+                      <td className="px-3 py-2"><Pill className="bg-emerald-100 text-emerald-800">{m.status}</Pill></td>
+                      <td className="px-3 py-2 text-xs">
+                        <button onClick={() => showToast(`Edit "${m.title}" — Phase 2 ships the slide editor`)}
+                          className="text-brand-700 hover:underline">Edit</button>
+                        {quiz && <span className="text-slate-400 ml-2">{quiz.questions?.length || 0}q quiz</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {tab === "sequences" && (
+        <div className="space-y-3">
+          <div className="text-xs text-slate-500">Sequences are ordered learning paths. Each sequence references courses and carries an authority-unlock spec applied on completion.</div>
+          {CM_SEQUENCES.map(seq => {
+            const course = CM_COURSES.find(c => c.id === seq.courseIds[0]);
+            const enrolled = CM_ENROLLMENTS.filter(e => e.sequenceId === seq.id).length;
+            return (
+              <div key={seq.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-800">{seq.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{seq.description}</div>
+                    <div className="text-xs text-slate-500 mt-1">Target: {seq.targetRole} · {seq.courseIds.length} course · {enrolled} enrolled</div>
+                    {seq.unlockOnCompletion && (
+                      <div className="text-xs text-amber-700 mt-1">
+                        Unlock on completion: +{fmtMoney(seq.unlockOnCompletion.authorityBoost.settlement)} settlement · +{fmtMoney(seq.unlockOnCompletion.authorityBoost.demand)} demand
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Pill className="bg-emerald-100 text-emerald-800">Published</Pill>
+                  </div>
+                </div>
+                {course && (
+                  <div className="mt-3 border-t border-slate-100 pt-2 text-xs text-slate-600">
+                    Course: <span className="font-medium text-slate-800">{course.title}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {tab === "quizzes" && (
+        <div className="space-y-3">
+          <div className="text-xs text-slate-500">Module MC quizzes require 70% to pass. The FR capstone requires self-attestation after reviewing the model answer.</div>
+          {CM_MODULE_QUIZZES.map(quiz => {
+            const mod = CM_MODULES.find(m => m.id === quiz.moduleId);
+            const attempts = CM_QUIZ_ATTEMPTS.filter(qa => qa.quizId === quiz.id);
+            const passCount = attempts.filter(a => a.passed).length;
+            const passRate = attempts.length > 0 ? Math.round((passCount / attempts.length) * 100) : null;
+            return (
+              <div key={quiz.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-slate-800">{quiz.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">Module: {mod?.title || "—"} · {(quiz.questions || []).length} questions · 70% to pass</div>
+                    {passRate !== null && (
+                      <div className="text-xs text-slate-600 mt-1">Pass rate: {passRate}% ({passCount}/{attempts.length} attempts)</div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 items-center shrink-0">
+                    <Pill className="bg-blue-100 text-blue-800">MC</Pill>
+                    <button onClick={() => showToast("Quiz editor — Phase 2")}
+                      className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50">Edit</button>
+                  </div>
+                </div>
+                <div className="mt-2 space-y-1">
+                  {(quiz.questions || []).slice(0, 2).map((q, i) => (
+                    <div key={q.id} className="text-xs text-slate-600 truncate">Q{i + 1}. {q.stem}</div>
+                  ))}
+                  {(quiz.questions?.length || 0) > 2 && (
+                    <div className="text-xs text-slate-400 italic">+ {quiz.questions.length - 2} more question{quiz.questions.length - 2 !== 1 ? "s" : ""}</div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {/* FR capstone */}
+          <div className="bg-white border border-slate-200 rounded-lg p-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-slate-800">{CM_COURSE_QUIZ.title}</div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  Course: {CM_COURSES.find(c => c.id === CM_COURSE_QUIZ.courseId)?.title || "—"} · {CM_COURSE_QUIZ.scenarios?.length || 0} scenario · Self-attestation
+                </div>
+                <div className="text-xs text-slate-600 mt-1">
+                  {CM_QUIZ_ATTEMPTS.filter(qa => qa.quizId === CM_COURSE_QUIZ.id && qa.passed).length} attestation{CM_QUIZ_ATTEMPTS.filter(qa => qa.quizId === CM_COURSE_QUIZ.id && qa.passed).length !== 1 ? "s" : ""} on record
+                </div>
+              </div>
+              <Pill className="bg-violet-100 text-violet-800 shrink-0">FR Capstone</Pill>
+            </div>
+            {CM_COURSE_QUIZ.scenarios?.map(sc => (
+              <div key={sc.id} className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-600">
+                {sc.title} · {sc.covers} · ~{sc.estimatedMinutes} min
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
