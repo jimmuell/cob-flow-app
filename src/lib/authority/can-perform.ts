@@ -2,6 +2,7 @@ import type { CurrentUser } from "@/lib/auth/session";
 import type { Role } from "@/lib/types/role";
 
 export type AuthorityAction =
+  // Claims workflow actions
   | "ACCEPT_SETTLEMENT"
   | "SEND_DEMAND"
   | "REDUCE_LIEN"
@@ -11,7 +12,22 @@ export type AuthorityAction =
   | "CHANGE_LEVEL"
   | "ACTIVATE_USER"
   | "REOPEN_CASE"
-  | "WRITE_OFF";
+  | "WRITE_OFF"
+  // Content Manager authoring actions
+  | "CREATE_SEQUENCE"
+  | "UPDATE_SEQUENCE"
+  | "PUBLISH_SEQUENCE"
+  | "ARCHIVE_SEQUENCE"
+  | "CREATE_COURSE"
+  | "UPDATE_COURSE"
+  | "PUBLISH_COURSE"
+  | "ARCHIVE_COURSE"
+  | "CREATE_MODULE"
+  | "UPDATE_MODULE"
+  | "PUBLISH_MODULE"
+  | "ARCHIVE_MODULE"
+  | "CREATE_LESSON"
+  | "CREATE_QUIZ";
 
 export type ApprovalQueueType =
   | "LIEN_REDUCTION"

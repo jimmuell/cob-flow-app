@@ -9,6 +9,7 @@ import {
   DollarSign,
   Users,
   Settings,
+  Library,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils/classnames";
@@ -21,6 +22,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   DollarSign,
   Users,
   Settings,
+  Library,
 };
 
 export interface NavItem {

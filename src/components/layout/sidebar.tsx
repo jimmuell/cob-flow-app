@@ -31,7 +31,10 @@ export async function Sidebar({ currentUser }: SidebarProps) {
         }]
       : []),
     ...(isAdmin(currentUser)
-      ? [{ id: "admin", label: "Admin", href: "/admin", iconId: "Settings" }]
+      ? [
+          { id: "admin", label: "Admin", href: "/admin", iconId: "Settings" },
+          { id: "admin-content", label: "Content", href: "/admin/content", iconId: "Library" },
+        ]
       : []),
   ];
 
