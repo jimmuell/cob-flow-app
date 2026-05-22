@@ -1761,12 +1761,15 @@ function App() {
     if (next.role === "ANALYST" && (onMgmt || onAdmin)) setView("dashboard");
     if (next.role === "ADMIN" && onMgmt) setView("dashboard");  // Admin doesn't see Management
     if ((next.role === "SUPERVISOR" || next.role === "MANAGER") && onAdmin) setView("dashboard"); // Supervisor/Manager don't see Admin
-    // CM view bounces: each CM view is role-specific
+    // CM view bounces: Analyst → my_learning only; Supervisor/Manager → either cm_mgmt or cm_oversight
     if (onCm) {
       const allowed = (next.role === "ANALYST" && view === "my_learning") ||
-                      (next.role === "SUPERVISOR" && view === "cm_oversight") ||
-                      (next.role === "MANAGER" && view === "cm_mgmt");
-      if (!allowed) setView("dashboard");
+                      ((next.role === "SUPERVISOR" || next.role === "MANAGER") && (view === "cm_mgmt" || view === "cm_oversight"));
+      if (!allowed) {
+        if (next.role === "ANALYST") setView("my_learning");
+        else if (next.role === "SUPERVISOR" || next.role === "MANAGER") setView("cm_mgmt");
+        else setView("dashboard");
+      }
     }
     return next;
   });
@@ -1802,8 +1805,8 @@ function App() {
       children: [
         { id: "admin_overview", label: "Overview" },
         { id: "admin_team",     label: "Team" },
-        ...(currentUser.role === "SUPERVISOR" ? [{ id: "cm_oversight", label: "Learning" }] : []),
-        ...(currentUser.role === "MANAGER"    ? [{ id: "cm_mgmt",      label: "Learning" }] : []),
+        ...(currentUser.role === "SUPERVISOR" || currentUser.role === "MANAGER" ? [{ id: "cm_mgmt",      label: "Learning Content"   }] : []),
+        ...(currentUser.role === "SUPERVISOR" || currentUser.role === "MANAGER" ? [{ id: "cm_oversight", label: "Learning Oversight" }] : []),
       ] },
     { id: "sys_admin",   label: "Admin",            icon: ICONS.settings, requiresRole: ["ADMIN"] },
   ].filter(n => !n.requiresRole || n.requiresRole.includes(currentUser.role));
