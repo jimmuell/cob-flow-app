@@ -2,10 +2,10 @@
 
 **Status:** draft for design review  
 **Prepared by:** cob-flow-app Claude Code agent from Cowork design-review session  
-**Reviewed by:** Jim (pending)  
+**Reviewed by:** Jim (open questions resolved 2026-05-22; corrective pass applied)  
 **Target branch:** main
 
-A future engineer reading this spec must be able to build the Content Manager without access to any prior Cowork session. Where decisions are locked they are stated as facts. Where decisions are open they are flagged inline with "Open question:".
+A future engineer reading this spec must be able to build the Content Manager without access to any prior Cowork session. All design decisions are locked; all open questions from the initial draft have been resolved.
 
 ---
 
@@ -30,9 +30,7 @@ All signed-in users are learners. There is no separate learner role. Enrollment 
 
 **Per-tenant feature flag.** The `tenants` table gains a `features` JSONB column. The key `content_manager: boolean` controls whether the CM is exposed in the nav for that tenant. Customers who run in-house training programs disable the CM; their Analysts gain authority via manager-grant only (see §6). The flag gates the learner surface, the authoring surface, and the sidebar nav item. The Admin-authored platform route `/admin/content/*` is not gated by this flag.
 
-**Module terminology.** "Module" replaces "Chapter" at the schema, UI, and future source-content level throughout this spec. The existing `content/courses/auto-cob-wisconsin/` directory structure uses `chapter-NN-name/` naming; a follow-up agent prompt will rename those directories and update `content/courses/auto-cob-wisconsin/README.md` and `content/courses/auto-cob-wisconsin/conventions.md`. This spec uses "Module" exclusively.
-
-Open question: `conventions.md` citation style uses `[Chapter 6 § ...]` format. When the chapter-to-module rename happens, should citation helpers in the slide editor emit `[Module 6 § ...]` instead? Jim to confirm before the slide editor is built.
+**Module terminology.** "Module" replaces "Chapter" at the schema, UI, and future source-content level throughout this spec. The existing `content/courses/auto-cob-wisconsin/` directory structure uses `chapter-NN-name/` naming; a follow-up agent prompt will rename those directories and update `content/courses/auto-cob-wisconsin/README.md` and `content/courses/auto-cob-wisconsin/conventions.md`. This spec uses "Module" exclusively. Citation helpers in the slide editor emit Module-based citations (e.g., `[Module 6 § Plan Document Classification]`); the existing `conventions.md` citation style is updated to match at chapter→module rename time.
 
 ---
 
@@ -87,12 +85,11 @@ User ──< AuthorityUnlock
 
 ### Terminology
 
+The Customer/Analyst/Self depth markers in the existing source files at `content/courses/auto-cob-wisconsin/` are removed during the ingestion-prep pass before any chapter content is ingested. v1 content is single-audience per course (course-level `audience` column); there is no per-section, per-slide, or per-question depth metadata in the schema or in the going-forward authoring conventions.
+
 - "Module" = instructional block within a course. Not "Chapter" (deprecated), not "Unit".
 - "Audience" = the role a course is designed for (`'analyst'` in v1). Not "track" (ambiguous), not "tier" (reserved — see below).
-- "Content level" = the Customer/Analyst/Self depth markers in source markdown files (`conventions.md`). Not "tier" — the word "Tier" is reserved exclusively for `LETTER_TYPES` correspondence priority (Tier 1 / Tier 2) per CLAUDE.md.
 - "Authority unlock" = a granted ceiling along one dimension. Not "permission" (that's role-based access control), not "certification" (Phase 2).
-
-Open question: `content/courses/auto-cob-wisconsin/conventions.md` uses `**Tier:** Customer | Analyst | Self` in the quiz question schema, and `README.md` uses "three tiers." This collides with CLAUDE.md's guardrail that "Tier" = `LETTER_TYPES` priority. Jim to decide the replacement label for content depth markers before the ingestion script is written. This spec uses "content level" going forward.
 
 ---
 
@@ -228,23 +225,23 @@ export const lessons = pgTable('lessons', {
 ```typescript
 export const quizzes = pgTable('quizzes', {
   id:             uuid('id').primaryKey().defaultRandom(),
-  parent_type:    text('parent_type').notNull(),   // 'module' | 'course'
-  parent_id:      uuid('parent_id').notNull(),     // app-layer FK; no DB-level constraint (polymorphic)
+  module_id:      uuid('module_id').references(() => modules.id, { onDelete: 'cascade' }),
+  course_id:      uuid('course_id').references(() => courses.id, { onDelete: 'cascade' }),
   title:          text('title').notNull(),
   description:    text('description'),
   pass_threshold: integer('pass_threshold').notNull().default(80), // 0–100
-  quiz_type:      text('quiz_type').notNull(),     // 'multiple_choice' | 'free_response'
+  quiz_type:      text('quiz_type').notNull(), // 'multiple_choice' | 'free_response'
   status:         text('status').notNull().default('draft'),
   created_at:     timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updated_at:     timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
-  parentTypeCheck: check(
-    'quizzes_parent_type',
-    sql`parent_type IN ('module', 'course')`
+  exactlyOneParentCheck: check(
+    'quizzes_exactly_one_parent',
+    sql`(module_id IS NOT NULL AND course_id IS NULL) OR (module_id IS NULL AND course_id IS NOT NULL)`
   ),
-  quizTypeModuleCheck: check(
+  moduleQuizMustBeMcCheck: check(
     'quizzes_module_must_be_mc',
-    sql`parent_type != 'module' OR quiz_type = 'multiple_choice'`
+    sql`module_id IS NULL OR quiz_type = 'multiple_choice'`
   ),
   quizTypeCheck: check(
     'quizzes_quiz_type',
@@ -252,8 +249,8 @@ export const quizzes = pgTable('quizzes', {
   ),
   statusCheck: check('quizzes_status', sql`status IN ('draft', 'published', 'archived')`),
 }));
-// polymorphic parent_id: at write time, app-layer code verifies the UUID exists in
-// either the modules or courses table depending on parent_type.
+// Quiz has exactly one parent: either a module (MC self-check) or a course (capstone, MC or FR).
+// Database-enforced referential integrity and cascade-on-delete via two nullable FKs + XOR CHECK.
 ```
 
 ### table: `quiz_questions`
@@ -376,7 +373,7 @@ export const authorityUnlocks = pgTable('authority_unlocks', {
   unlock_type:         text('unlock_type').notNull(),
   unlock_value:        numeric('unlock_value', { precision: 15, scale: 2 }).notNull(),
   source:              text('source').notNull(), // 'course_completion' | 'module_completion' | 'manager_grant'
-  source_id:           uuid('source_id'),        // course_completion.id, course_completion.id, or null for manager_grant
+  source_id:           uuid('source_id'),        // course_completions.id (for source='course_completion'), modules.id (for source='module_completion'), NULL (for source='manager_grant')
   granted_by_user_id:  uuid('granted_by_user_id').references(() => users.id), // null for system-granted
   granted_at:          timestamp('granted_at', { withTimezone: true }).notNull().defaultNow(),
   revoked_at:          timestamp('revoked_at', { withTimezone: true }),
@@ -398,7 +395,7 @@ export const authorityUnlocks = pgTable('authority_unlocks', {
 }));
 ```
 
-Open question: §3 prompt text says "keep enum value 'chapter_completion'" and then "for v1, use 'module_completion' as the value." These are contradictory. This spec uses `'module_completion'` as the v1 value. Jim to confirm before migration is written.
+There is intentionally no `module_completions` table. Module completion is derived state — a module is considered complete when (a) every lesson in the module has a `lesson_completions` row for the user, AND (b) the module's quiz (if any) has a `quiz_attempts` row for the user with `passed = true`. The module itself is the stable reference for `source_id` when `source = 'module_completion'`.
 
 ### table: `learning_notifications`
 
@@ -406,7 +403,7 @@ Open question: §3 prompt text says "keep enum value 'chapter_completion'" and t
 export const learningNotifications = pgTable('learning_notifications', {
   id:                 uuid('id').primaryKey().defaultRandom(),
   tenant_id:          uuid('tenant_id').notNull().references(() => tenants.id),
-  recipient_user_id:  uuid('recipient_user_id').notNull().references(() => users.id),
+  recipient_user_id:  uuid('recipient_user_id').references(() => users.id),
   subject_user_id:    uuid('subject_user_id').notNull().references(() => users.id),
   notification_type:  text('notification_type').notNull(), // 'course_completed' | 'module_completed' | 'quiz_flagged'
   course_id:          uuid('course_id').references(() => courses.id),
@@ -477,7 +474,8 @@ CREATE INDEX courses_author_id_idx ON courses(author_id);
 CREATE INDEX modules_course_id_idx ON modules(course_id);
 CREATE INDEX lessons_module_id_idx ON lessons(module_id);
 CREATE INDEX quiz_questions_quiz_id_idx ON quiz_questions(quiz_id);
-CREATE INDEX quizzes_parent_id_idx ON quizzes(parent_id);
+CREATE INDEX quizzes_module_id_idx ON quizzes(module_id) WHERE module_id IS NOT NULL;
+CREATE INDEX quizzes_course_id_idx ON quizzes(course_id) WHERE course_id IS NOT NULL;
 CREATE INDEX course_enrollments_user_id_idx ON course_enrollments(user_id);
 CREATE INDEX course_enrollments_course_id_idx ON course_enrollments(course_id);
 CREATE INDEX quiz_attempts_user_id_quiz_id_idx ON quiz_attempts(user_id, quiz_id);
@@ -573,6 +571,24 @@ CREATE OR REPLACE FUNCTION effective_authority(target_user_id uuid) RETURNS json
     GROUP BY unlock_type
   ) sub;
 $$ LANGUAGE sql STABLE SECURITY DEFINER;
+-- System-triggered unlock writes (from course/module completion flows) call this function.
+-- SECURITY DEFINER means it runs with the function owner's privileges, bypassing RLS on
+-- authority_unlocks. Manager-grant inserts continue to flow through the RLS-checked path.
+CREATE OR REPLACE FUNCTION grant_unlock_from_completion(
+  target_user_id    uuid,
+  target_tenant_id  uuid,
+  p_unlock_type     text,
+  p_unlock_value    numeric,
+  p_source          text,  -- 'course_completion' or 'module_completion'
+  p_source_id       uuid
+) RETURNS uuid AS $$
+  INSERT INTO authority_unlocks (
+    user_id, tenant_id, unlock_type, unlock_value, source, source_id, granted_by_user_id
+  ) VALUES (
+    target_user_id, target_tenant_id, p_unlock_type, p_unlock_value, p_source, p_source_id, NULL
+  )
+  RETURNING id;
+$$ LANGUAGE sql VOLATILE SECURITY DEFINER;
 ```
 
 ### RLS Policies
@@ -624,15 +640,15 @@ CREATE POLICY modules_write ON modules FOR INSERT WITH CHECK (
 
 ```sql
 CREATE POLICY quizzes_read ON quizzes FOR SELECT USING (
-  (parent_type = 'module' AND EXISTS (
+  (module_id IS NOT NULL AND EXISTS (
     SELECT 1 FROM modules m JOIN courses c ON c.id = m.course_id
-    WHERE m.id = quizzes.parent_id
+    WHERE m.id = quizzes.module_id
       AND (c.content_type = 'platform' OR is_tenant_member(c.tenant_id))
   ))
   OR
-  (parent_type = 'course' AND EXISTS (
+  (course_id IS NOT NULL AND EXISTS (
     SELECT 1 FROM courses c
-    WHERE c.id = quizzes.parent_id
+    WHERE c.id = quizzes.course_id
       AND (c.content_type = 'platform' OR is_tenant_member(c.tenant_id))
   ))
 );
@@ -671,6 +687,8 @@ CREATE POLICY authority_unlocks_insert ON authority_unlocks FOR INSERT WITH CHEC
 );
 ```
 
+System-triggered unlock writes (from `completeModule()` and `completeCourse()` server actions, triggered when a learner — typically an Analyst — completes their last requirement) do NOT flow through this RLS policy. They go through `grant_unlock_from_completion()`, which is `SECURITY DEFINER` and runs with the function owner's privileges. This is the standard Postgres pattern for system-triggered writes that should not be subject to caller RLS. Manager-grant inserts (initiated by a Manager from the Management workspace) continue to flow through this policy.
+
 #### `learning_notifications`
 
 ```sql
@@ -689,7 +707,7 @@ CREATE POLICY notifications_read ON learning_notifications FOR SELECT USING (
 
 The `audience` column on `course_sequences` and `courses` uses the value `'analyst'` for v1. It is an informational label used for catalog filtering and navigation defaults; it does not gate access. Any signed-in user can enroll in any course regardless of the course's audience.
 
-Extending the enum to `'supervisor'` or `'manager'` is a zero-downtime operation: add the new value to the database CHECK constraint and add it to the TypeScript union in the app. Existing RLS policies and catalog queries require no change.
+Extending the enum to `'supervisor'` or `'manager'` is a near-instant operation: Postgres briefly locks the table during the `ALTER TABLE ... DROP CONSTRAINT ... ADD CONSTRAINT` cycle to validate existing rows, which at our scale (catalog tables in the hundreds of rows at most) is millisecond-order. Existing RLS policies and catalog queries require no change when audience values are added.
 
 The learner-facing catalog defaults its audience filter to the current user's role. A "View all" toggle shows courses from other audiences, supporting pre-promotion training. An Analyst who completes Supervisor-audience content accumulates supervisor-domain unlocks; those unlocks sit dormant in `effective_authority()` until the Analyst's role is promoted.
 
@@ -830,9 +848,7 @@ Breadcrumb: Content / Courses / [title]. Metadata header: title, audience, statu
 
 Identical structure to Admin authoring at `/management/content/*` but scoped to `content_type = 'customer'` and the session tenant. Role gate: MANAGER or SUPERVISOR.
 
-A Manager sees all Customer content for their tenant. A Supervisor sees Customer content for their tenant and can author (create/edit) but cannot publish without Manager confirmation.
-
-Open question: Should Supervisors be able to publish Customer content independently, or should all publications require Manager approval? Jim to confirm before the publish action is implemented.
+Managers and Supervisors have equal CRUD rights on Customer content scoped to their tenant: both can create, edit, publish, and archive. This matches the §4 RLS matrix and avoids inventing a publish-approval workflow before the Management workspace exists. The revocation mechanism is the v1 safety net: a Manager (or Admin) can revoke any authority unlock earned through customer content via the `/management/learning/learners/[userId]/authority/` surface, with required justification, audit-logged under category `AUTHORITY`. Phase 2 may introduce a per-content `requires_supervisor_review` flag analogous to the per-quiz flag in §9; this is accommodated by the existing `tenants.features` JSONB without schema migration.
 
 ### Learner Screens
 
@@ -957,7 +973,7 @@ On course completion and module completion, the system creates a `learning_notif
 - If the learner is a Supervisor, route to the team's Manager
 - Manager-level completions produce no automatic notification
 
-If no supervisor is assigned to the team, the notification row is created with `recipient_user_id = NULL` for audit purposes and does not appear in any UI.
+If no supervisor is resolvable for the learner's team, the notification row is created with `recipient_user_id = NULL` for audit purposes. Such rows do not appear in the Supervisor or Manager notification UI but remain queryable by Admins for compliance review and surface in a compliance audit report (Phase 2 feature).
 
 ### Self-Attestation Is Not Gated
 
@@ -1016,7 +1032,7 @@ All audit events are written from server actions, never from client components. 
 | `module_archived` | Status → 'archived' | `{ module_id, title, justification }` |
 | `lesson_created` | Lesson row inserted | `{ lesson_id, module_id, title, lesson_type }` |
 | `lesson_updated` | Lesson slides saved | `{ lesson_id, slide_count }` |
-| `quiz_created` | Quiz row inserted | `{ quiz_id, parent_type, parent_id, quiz_type }` |
+| `quiz_created` | Quiz row inserted | `{ quiz_id, module_id?, course_id?, quiz_type }` |
 | `quiz_published` | Status → 'published' | `{ quiz_id }` |
 | `quiz_archived` | Status → 'archived' | `{ quiz_id, justification }` |
 | `pdf_imported` | PdfImportJob reaches 'complete' | `{ job_id, lesson_id, source_filename, page_count }` |
@@ -1101,7 +1117,7 @@ This checklist is the sequence of work a follow-up implementation plan will spli
 
 2. **Verify Supabase is running.** Run `supabase start` (or `supabase status` if already running). Confirm local URL `http://127.0.0.1:54321` and Postgres at `127.0.0.1:54322`.
 
-3. **Write Drizzle schemas.** Create `src/db/schema/` with files: `content.ts`, `learner.ts`, `authority.ts`, `notifications.ts`, `jobs.ts` (table groupings follow §3). Extend the existing tenants schema file to add `features`.
+3. **Write Drizzle schemas.** Create `src/lib/db/schema/` with files: `content.ts`, `learner.ts`, `authority.ts`, `notifications.ts`, `jobs.ts` (table groupings follow §3). Extend the existing tenants schema file to add `features`.
 
 4. **Generate initial migration.** Run `npm run db:generate`. Confirm a new migration file appears under `drizzle/` with all CM table DDL.
 
@@ -1187,7 +1203,7 @@ The v1 schema and data model are designed so Phase 2 work is logic and configura
 
 **Postgres full-text search.** Add `tsvector` generated columns + `GIN` indexes on `courses.title`/`description`. Catalog search becomes server-side FTS; no data migration.
 
-**Audience expansion.** Adding `'supervisor'` or `'manager'` to the `audience` CHECK constraint is a zero-downtime `ALTER TABLE` change; existing queries and RLS policies require no changes.
+**Audience expansion.** Adding `'supervisor'` or `'manager'` to the `audience` CHECK constraint requires a near-instant `ALTER TABLE ... DROP CONSTRAINT ... ADD CONSTRAINT` cycle; existing queries and RLS policies require no changes.
 
 **Pre-promotion training workflow.** Supervisor-domain unlocks earned by an Analyst sit dormant; Phase 2 surfaces them as "Pending activation" and activates on role promotion via a query-time change in `effective_authority()`.
 
