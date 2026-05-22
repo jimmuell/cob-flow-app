@@ -5,7 +5,7 @@ export interface AuditEvent {
   timestamp: string;
   justification?: string;
   metadata?: Record<string, unknown>;
-  category: "WORKFLOW" | "CONFIG" | "INGEST" | "AUTH" | "AUTHORITY";
+  category: "WORKFLOW" | "CONFIG" | "INGEST" | "AUTH" | "AUTHORITY" | "LEARNING";
   tenantId: string;
 }
 
