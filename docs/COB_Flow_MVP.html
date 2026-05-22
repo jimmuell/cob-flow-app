@@ -1116,25 +1116,26 @@ const CUSTOMER_FEEDS = [
    enrollments, lesson completions, quiz attempts, authority unlocks, notifications.
    ========================================================================= */
 const CM_SEQUENCES = [
-  { id: "seq_001", title: "Auto COB Analyst Onboarding — Wisconsin", targetRole: "ANALYST",
+  { id: "seq_001", title: "Auto COB Analyst Onboarding — Wisconsin", audience: "analyst",
     courseIds: ["course_001"], createdBy: "platform", tenantId: null, status: "published",
     description: "Complete onboarding path for Wisconsin-pilot analysts. Covers foundations through COB fundamentals.",
-    unlockOnCompletion: { authorityBoost: { settlement: 5000, demand: 10000 } } },
+    unlockOnCompletion: { authorityBoost: { settlement: 10000, demand: 5000, lienReduction: 3000 } } },
 ];
 
 const CM_COURSES = [
   { id: "course_001", title: "Auto COB — Wisconsin Pilot", status: "published",
-    description: "Three-module pilot of the full 12-chapter Auto COB Wisconsin curriculum. Validates the format end-to-end.",
-    tier: "Analyst", estimatedHours: 4, moduleCount: 3, createdBy: "platform", tenantId: null,
+    description: "Three-module pilot of the full 12-module Auto COB Wisconsin curriculum. Validates the format end-to-end.",
+    estimatedHours: 4, moduleCount: 3, createdBy: "platform", tenantId: null,
     publishedAt: "2026-05-01" },
 ];
 
 const CM_MODULES = [
-  { id: "mod_001", courseId: "course_001", order: 1, title: "Chapter 1 — Foundations: Why Auto COB Exists",
+  { id: "mod_001", courseId: "course_001", order: 1, title: "Module 1 — Foundations: Why Auto COB Exists",
     status: "published", estimatedMinutes: 90,
+    unlockOnCompletion: { authorityBoost: { lienReduction: 1000 } },
     slides: [
       { id: "s1_1", heading: "What Is Auto COB?",
-        body: "Auto COB arises when a health plan pays medical bills for injuries caused by a motor vehicle accident. The health plan has a legal right of subrogation and coordination to recover those payments from the responsible auto insurer — not from the member." },
+        body: "Auto COB arises when a health plan pays medical bills for injuries caused by a motor vehicle accident. The health plan has a legal right of subrogation and coordination of benefits to recover those payments from the responsible auto insurer — not from the member." },
       { id: "s1_2", heading: "Wisconsin Is an At-Fault State",
         body: "Wisconsin is NOT a no-fault state. The at-fault driver's auto liability policy is the primary source of recovery for accident-related medical expenses. There is no mandatory PIP in Wisconsin; Med-Pay is optional under Wis. Stat. § 632.32." },
       { id: "s1_3", heading: "Made-Whole Doctrine",
@@ -1142,8 +1143,9 @@ const CM_MODULES = [
       { id: "s1_4", heading: "The Recovery Workflow in One Sentence",
         body: "A claim arrives → triage identifies subrogation potential → COB primacy is determined → demand is sent to the auto carrier or attorney → settlement is negotiated → the common-fund pro-rata attorney fee share is applied → the Plan receives its net recovery." },
     ] },
-  { id: "mod_002", courseId: "course_001", order: 2, title: "Chapter 2 — Auto Insurance: Crash Course for Health-Side Learners",
+  { id: "mod_002", courseId: "course_001", order: 2, title: "Module 2 — Auto Insurance: Crash Course for Health-Side Learners",
     status: "published", estimatedMinutes: 75,
+    unlockOnCompletion: { authorityBoost: { settlement: 1000 } },
     slides: [
       { id: "s2_1", heading: "The Five Coverage Types You'll Encounter",
         body: "Liability coverage (pays the other party), Med-Pay (pays the policyholder's medical bills regardless of fault), PIP (mandatory no-fault states only — not WI), UM/UIM (uninsured / underinsured motorist), and Collision/Comprehensive (property damage, rarely relevant to health recovery)." },
@@ -1152,7 +1154,7 @@ const CM_MODULES = [
       { id: "s2_3", heading: "Auto Policy COB Clauses",
         body: "Auto policies often have 'excess clauses' that try to make the auto coverage pay only what is left after other insurance. Health plans (especially self-funded ERISA plans) often have their own COB clauses. These clauses interact — ERISA preemption may override state law on which clause wins." },
     ] },
-  { id: "mod_003", courseId: "course_001", order: 3, title: "Chapter 3 — COB Fundamentals: The NAIC Framework",
+  { id: "mod_003", courseId: "course_001", order: 3, title: "Module 3 — COB Fundamentals: The NAIC Framework",
     status: "published", estimatedMinutes: 80,
     slides: [
       { id: "s3_1", heading: "The NAIC Model COB Regulation",
@@ -1167,27 +1169,27 @@ const CM_MODULES = [
 ];
 
 const CM_MODULE_QUIZZES = [
-  { id: "qz_mod_001", moduleId: "mod_001", type: "multiple_choice", title: "Chapter 1 Quiz — Foundations",
+  { id: "qz_mod_001", moduleId: "mod_001", type: "multiple_choice", title: "Module 1 Quiz — Foundations",
     questions: [
-      { id: "q1_1", tier: "Customer | Analyst | Self", topic: "Auto COB purpose",
+      { id: "q1_1", topic: "Auto COB purpose",
         stem: "Which of the following best describes the legal basis for a health plan's Auto COB recovery right?",
         options: { a: "Health plans profit by keeping medical payments low", b: "Health plans have a right of subrogation and COB to recover from the at-fault party or auto carrier", c: "Auto insurers voluntarily reimburse health plans as an industry courtesy", d: "Federal law requires all auto insurers to pay health plan claims directly" },
         answer: "b", rationale: "Plans have a subrogation right (recovery from the tortfeasor) and a COB right (coordination with the auto payer). When a third party caused the injury, the health plan that paid can seek recovery from that third party or its insurer." },
-      { id: "q1_2", tier: "Analyst | Self", topic: "Made-whole doctrine",
+      { id: "q1_2", topic: "Made-whole doctrine",
         stem: "Under Wisconsin's made-whole doctrine, the health plan's recovery is:",
         options: { a: "Available immediately upon any settlement being reached", b: "Subordinate to the member's full recovery — plan cannot recover until the member is made whole", c: "Limited to 50% of the plan's paid amount as a default", d: "Governed only by the plan's SPD language, not by state law" },
         answer: "b", rationale: "Rimes v. State Farm (1982) established that Wisconsin health plans cannot recover until the member has been fully compensated for all losses. The made-whole doctrine can reduce or eliminate plan recovery in cases of partial settlements." },
     ] },
-  { id: "qz_mod_002", moduleId: "mod_002", type: "multiple_choice", title: "Chapter 2 Quiz — Auto Insurance",
+  { id: "qz_mod_002", moduleId: "mod_002", type: "multiple_choice", title: "Module 2 Quiz — Auto Insurance",
     questions: [
-      { id: "q2_1", tier: "Customer | Analyst | Self", topic: "Med-Pay in Wisconsin",
+      { id: "q2_1", topic: "Med-Pay in Wisconsin",
         stem: "Med-Pay coverage in Wisconsin is best described as:",
         options: { a: "Mandatory on all personal auto policies under Wis. Stat. § 632.32", b: "Optional — available for purchase but not required by Wisconsin law", c: "Prohibited — Wisconsin banned Med-Pay to encourage liability settlements", d: "Only available on commercial fleet policies, not personal auto" },
         answer: "b", rationale: "Under Wis. Stat. § 632.32, Med-Pay is optional in Wisconsin. Because Wisconsin is an at-fault state (not no-fault), there is no mandatory PIP or Med-Pay requirement. The policyholder's choice to buy or decline Med-Pay affects the available recovery sources." },
     ] },
-  { id: "qz_mod_003", moduleId: "mod_003", type: "multiple_choice", title: "Chapter 3 Quiz — COB Fundamentals",
+  { id: "qz_mod_003", moduleId: "mod_003", type: "multiple_choice", title: "Module 3 Quiz — COB Fundamentals",
     questions: [
-      { id: "q3_1", tier: "Customer | Analyst | Self", topic: "NAIC primacy rule",
+      { id: "q3_1", topic: "NAIC primacy rule",
         stem: "Under the NAIC Model COB Regulation, when an individual is covered as an active employee on one plan and as a dependent spouse on another plan, which plan is primary?",
         options: { a: "The plan with the higher coverage limits", b: "The plan that has covered the patient the longest", c: "The plan covering the patient as an active employee is primary", d: "Primacy must be determined by a court" },
         answer: "c", rationale: "NAIC Model COB Regulation § 6(D)(1): A plan covering the patient as an employee (or subscriber) is primary over a plan covering them as a dependent. This is one of the clearest COB rules." },
@@ -1201,8 +1203,7 @@ const CM_COURSE_QUIZ = {
   scenarios: [
     { id: "sc_001",
       title: "The Brennan Recovery",
-      tier: "Analyst | Self",
-      covers: "Chapters 1–3",
+      covers: "Modules 1–3",
       estimatedMinutes: 20,
       facts: "Hailey Brennan (age 34) is an active employee covered by Anthem BCBS Wisconsin (fully-insured group plan). She was injured as a passenger in a single-vehicle Wisconsin MVA on 2026-03-18. The driver was cited for failure to yield; Hailey was 20% at fault. Anthem paid $38,520 in accident-related medical benefits. Hailey's auto policy includes American Family Med-Pay with a $5,000 limit. Hailey retained Brennan Law, S.C. (Patrick Brennan, Esq.) to pursue her personal injury claim. The proposed gross settlement is $95,000. Brennan Law's contingency fee is one-third ($31,667).",
       prompts: [
@@ -1240,26 +1241,26 @@ const CM_QUIZ_ATTEMPTS = [
 
 const CM_AUTHORITY_UNLOCKS = [
   { id: "au_001", userId: "u_jm", source: "course_completion", sourceId: "course_001",
-    grantedAt: "2026-05-14T16:01:00Z", authorityBoost: { settlement: 5000, demand: 10000 }, active: true,
+    grantedAt: "2026-05-14T16:01:00Z", authorityBoost: { settlement: 10000, demand: 5000, lienReduction: 3000 }, active: true,
     note: "Unlocked via completion of Auto COB Wisconsin (all modules + capstone attestation)." },
 ];
 
 const CM_NOTIFICATIONS = [
   { id: "cn_001", type: "module_completed", recipientUserId: "u_tr", recipientRole: "SUPERVISOR",
     relatedUserId: "u_jm", moduleId: "mod_003",
-    message: "J. Mueller completed Chapter 3 (COB Fundamentals) — all 3 modules of Auto COB Wisconsin now complete.",
+    message: "J. Mueller completed Module 3 (COB Fundamentals) — all 3 modules of Auto COB Wisconsin now complete.",
     createdAt: "2026-05-12T11:01:00Z", read: false },
   { id: "cn_002", type: "course_completed", recipientUserId: "u_tr", recipientRole: "SUPERVISOR",
     relatedUserId: "u_jm", courseId: "course_001",
-    message: "J. Mueller completed Auto COB Wisconsin (all modules + capstone attestation). Authority unlock applied: +$5,000 settlement, +$10,000 demand.",
+    message: "J. Mueller completed Auto COB Wisconsin (all modules + capstone attestation). Authority unlock applied: +$10,000 settlement, +$5,000 demand, +$3,000 lien reduction.",
     createdAt: "2026-05-14T16:02:00Z", read: false },
   { id: "cn_003", type: "quiz_failed", recipientUserId: "u_tr", recipientRole: "SUPERVISOR",
     relatedUserId: "u_kn", quizId: "qz_mod_001",
-    message: "K. Nguyen scored 50% on Chapter 1 Quiz (first attempt). Passed on second attempt (2026-05-07).",
+    message: "K. Nguyen scored 50% on Module 1 Quiz (first attempt). Passed on second attempt (2026-05-07).",
     createdAt: "2026-05-07T10:16:00Z", read: true },
   { id: "cn_004", type: "module_completed", recipientUserId: "u_kn", recipientRole: "ANALYST",
     relatedUserId: "u_kn", moduleId: "mod_001",
-    message: "You completed Chapter 1 — Foundations. Next up: Chapter 2 — Auto Insurance.",
+    message: "You completed Module 1 — Foundations. Next up: Module 2 — Auto Insurance.",
     createdAt: "2026-05-07T10:16:00Z", read: true },
 ];
 
@@ -5647,7 +5648,7 @@ function McQuizTaker({ quiz, previousBest, onClose, onPass, onFail }) {
     setScore(correct);
     setSubmitted(true);
   };
-  const passed = submitted && (score / questions.length) >= 0.70;
+  const passed = submitted && (score / questions.length) >= 0.80;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
          onClick={e => { if (e.target === e.currentTarget && !submitted) onClose(); }}>
@@ -5656,7 +5657,7 @@ function McQuizTaker({ quiz, previousBest, onClose, onPass, onFail }) {
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
           <div>
             <div className="text-sm font-semibold text-slate-800">{quiz.title}</div>
-            <div className="text-xs text-slate-500">{questions.length} question{questions.length !== 1 ? "s" : ""} · 70% to pass</div>
+            <div className="text-xs text-slate-500">{questions.length} question{questions.length !== 1 ? "s" : ""} · 80% to pass</div>
           </div>
           {!submitted && (
             <button onClick={onClose} className="p-1.5 hover:bg-slate-100 rounded">
@@ -5670,7 +5671,6 @@ function McQuizTaker({ quiz, previousBest, onClose, onPass, onFail }) {
               <div key={q.id} className="space-y-3">
                 <div>
                   <div className="text-sm font-medium text-slate-800">Q{qi + 1}. {q.stem}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wide">Tier: {q.tier}</div>
                 </div>
                 <div className="space-y-2">
                   {Object.entries(q.options).map(([key, text]) => (
@@ -5920,7 +5920,7 @@ function MyLearningView({ currentUser }) {
         {(unlock || (capstonePassed && !unlock)) && (
           <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2 text-xs text-emerald-800 flex items-center gap-2">
             <Icon d={ICONS.check} className="w-4 h-4 text-emerald-500 shrink-0" />
-            Authority unlock: +{fmtMoney((unlock || sequence?.unlockOnCompletion)?.authorityBoost?.settlement ?? 5000)} settlement · +{fmtMoney((unlock || sequence?.unlockOnCompletion)?.authorityBoost?.demand ?? 10000)} demand
+            Authority unlock: +{fmtMoney((unlock || sequence?.unlockOnCompletion)?.authorityBoost?.settlement ?? 10000)} settlement · +{fmtMoney((unlock || sequence?.unlockOnCompletion)?.authorityBoost?.demand ?? 5000)} demand
           </div>
         )}
       </div>
@@ -6026,7 +6026,7 @@ function CmOversightView({ currentUser }) {
 
   const supervisorUser = USERS.find(u => u.id === currentUser.id);
   const teamId = supervisorUser?.teamId;
-  const teamAnalysts = USERS.filter(u => u.teamId === teamId && (u.role === "ANALYST" || u.role === "SENIOR_ANALYST"));
+  const teamAnalysts = USERS.filter(u => u.teamId === teamId && u.role === "ANALYST");
   const myNotifs = CM_NOTIFICATIONS.filter(n => n.recipientUserId === currentUser.id || n.recipientRole === "SUPERVISOR");
   const unreadCount = myNotifs.filter(n => !n.read).length;
 
@@ -6089,7 +6089,7 @@ function CmOversightView({ currentUser }) {
                         return (
                           <div key={m.id} title={m.title}
                             className={`rounded px-1.5 py-1 text-center text-[10px] truncate ${done && qPassed ? "bg-emerald-100 text-emerald-800" : done ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-500"}`}>
-                            Ch.{i + 1}
+                            Mod.{i + 1}
                           </div>
                         );
                       })}
@@ -6148,12 +6148,15 @@ function CmMgmtView({ currentUser }) {
   const [toast, setToast] = useState("");
   const [dialog, setDialog] = useState(null);
   const showToast = (msg) => setToast(msg);
-  const allAnalysts = USERS.filter(u => u.role === "ANALYST" || u.role === "SENIOR_ANALYST");
+  const [slideEditorMod, setSlideEditorMod]   = useState(null);
+  const [quizEditorTarget, setQuizEditorTarget] = useState(null);
+  const allAnalysts = USERS.filter(u => u.role === "ANALYST");
 
   const TABS = [
     { id: "assignments", label: "Assignments" },
     { id: "sequences",   label: "Sequences"   },
     { id: "progress",    label: "Team Progress" },
+    { id: "authoring",   label: "Authoring"   },
   ];
 
   return (
@@ -6255,8 +6258,23 @@ function CmMgmtView({ currentUser }) {
         <div className="space-y-3">
           <div className="flex justify-between items-center flex-wrap gap-2">
             <div className="text-xs text-slate-500">{CM_SEQUENCES.length} sequence{CM_SEQUENCES.length !== 1 ? "s" : ""}</div>
-            <button onClick={() => showToast("Sequence creation — Phase 2 ships the full editor")}
-              className="text-xs px-2.5 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">+ New sequence (Phase 2)</button>
+            <button onClick={() => setDialog({
+              title: "New sequence",
+              description: "Create a learning sequence for your team.",
+              fields: [
+                { name: "title",       label: "Name",        type: "text",   required: true,  defaultValue: "" },
+                { name: "description", label: "Description", type: "text",   required: false, defaultValue: "" },
+                { name: "audience",    label: "Audience",    type: "select", required: true,  defaultValue: "analyst",
+                  options: [{ value: "analyst", label: "Analyst" }] },
+              ],
+              submitLabel: "Create",
+              onSubmit: (vals) => {
+                const newSeq = { id: `seq_${Date.now()}`, ...vals, courseIds: [], status: "draft", createdBy: "customer", tenantId: "t_001" };
+                CM_SEQUENCES.push(newSeq);
+                showToast(`Sequence "${vals.title}" created`);
+              },
+            })}
+              className="text-xs px-2.5 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">+ New sequence</button>
           </div>
           {CM_SEQUENCES.map(seq => {
             const enrolledCount = CM_ENROLLMENTS.filter(e => e.sequenceId === seq.id).length;
@@ -6268,7 +6286,7 @@ function CmMgmtView({ currentUser }) {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-800">{seq.title}</div>
                     <div className="text-xs text-slate-500 mt-0.5">{seq.description}</div>
-                    <div className="text-xs text-slate-500 mt-1">Target: {seq.targetRole} · Courses: {seq.courseIds.length} · {enrolledCount} enrolled · {completedCount2} completed</div>
+                    <div className="text-xs text-slate-500 mt-1">Target: {seq.audience} · Courses: {seq.courseIds.length} · {enrolledCount} enrolled · {completedCount2} completed</div>
                     {seq.unlockOnCompletion && (
                       <div className="text-xs text-amber-700 mt-1">
                         Completion unlock: +{fmtMoney(seq.unlockOnCompletion.authorityBoost.settlement)} settlement · +{fmtMoney(seq.unlockOnCompletion.authorityBoost.demand)} demand
@@ -6277,7 +6295,7 @@ function CmMgmtView({ currentUser }) {
                   </div>
                   <div className="flex gap-2">
                     <Pill className="bg-emerald-100 text-emerald-800">Published</Pill>
-                    <Pill className="bg-slate-100 text-slate-700">{seq.targetRole}</Pill>
+                    <Pill className="bg-slate-100 text-slate-700">{seq.audience}</Pill>
                   </div>
                 </div>
                 {course && (
@@ -6340,6 +6358,54 @@ function CmMgmtView({ currentUser }) {
         </div>
       )}
 
+      {tab === "authoring" && (
+        <div className="space-y-4">
+          <div className="text-xs text-slate-500">Author and edit course modules and quizzes for your team's learning sequences.</div>
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Modules</div>
+            {CM_MODULES.map(m => {
+              const quiz = CM_MODULE_QUIZZES.find(q => q.moduleId === m.id);
+              return (
+                <div key={m.id} className="bg-white border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-medium text-slate-800">{m.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{(m.slides || []).length} slides · {m.estimatedMinutes}m</div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => setSlideEditorMod(m)}
+                      className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50">Edit slides</button>
+                    {quiz && (
+                      <button onClick={() => setQuizEditorTarget({ quiz, isCapstone: false })}
+                        className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50">Edit quiz</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="text-xs font-semibold text-slate-700 uppercase tracking-wide mt-4 mb-2">Course Capstone</div>
+            <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium text-slate-800">{CM_COURSE_QUIZ.title}</div>
+                <div className="text-xs text-slate-500 mt-0.5">FR Capstone · Self-attestation · {CM_COURSE_QUIZ.scenarios?.length || 0} scenario</div>
+              </div>
+              <button onClick={() => setQuizEditorTarget({ quiz: CM_COURSE_QUIZ, isCapstone: true })}
+                className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50 shrink-0">Edit capstone</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {slideEditorMod && (
+        <SlideEditor mod={slideEditorMod}
+          onSave={(slides) => { showToast(`Module ${slideEditorMod.order} slides updated · ${slides.length} slides`); setSlideEditorMod(null); }}
+          onClose={() => setSlideEditorMod(null)} />
+      )}
+      {quizEditorTarget && (
+        <QuizEditor quiz={quizEditorTarget.quiz} isCapstone={quizEditorTarget.isCapstone}
+          onSave={(qs, title) => { showToast(`Quiz "${title}" updated · ${qs.length} questions`); setQuizEditorTarget(null); }}
+          onClose={() => setQuizEditorTarget(null)} />
+      )}
+
       <Toast message={toast} onClose={() => setToast("")} />
       <Dialog config={dialog} onClose={() => setDialog(null)} />
     </div>
@@ -6347,8 +6413,12 @@ function CmMgmtView({ currentUser }) {
 }
 
 /* ---------- Content Manager (Admin tab) ---------- */
-function SysAdminContent({ showToast }) {
+function SysAdminContent({ showToast, setDialog }) {
   const [tab, setTab] = useState("courses");
+  const [slideEditorMod, setSlideEditorMod]   = useState(null);
+  const [quizEditorTarget, setQuizEditorTarget] = useState(null); // { quiz, isCapstone }
+  const [cmCourses, setCmCourses]               = useState(CM_COURSES);
+  const [cmSequences, setCmSequences]           = useState(CM_SEQUENCES);
   const TABS = [
     { id: "courses",   label: "Courses",   count: CM_COURSES.length },
     { id: "modules",   label: "Modules",   count: CM_MODULES.length },
@@ -6374,10 +6444,37 @@ function SysAdminContent({ showToast }) {
         <div className="space-y-3">
           <div className="flex justify-between items-center flex-wrap gap-2">
             <div className="text-xs text-slate-500">Platform-authored courses available to all tenants.</div>
-            <button onClick={() => showToast("Course creation — Phase 2 ships the full slide+quiz editor")}
-              className="text-xs px-2.5 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">+ New course (Phase 2)</button>
+            <button onClick={() => setDialog({
+              title: "New course",
+              description: "Create a draft platform course.",
+              fields: [
+                { name: "title",       label: "Title",           type: "text",   required: true,  defaultValue: "" },
+                { name: "description", label: "Description",     type: "text",   required: false, defaultValue: "" },
+                { name: "audience",    label: "Audience",        type: "select", required: true,  defaultValue: "analyst",
+                  options: [{ value: "analyst", label: "Analyst" }] },
+                { name: "estimatedHours", label: "Est. Hours",   type: "text",   required: false, defaultValue: "4" },
+              ],
+              submitLabel: "Create draft",
+              onSubmit: (vals) => {
+                const newCourse = {
+                  id: `course_${Date.now()}`,
+                  title: vals.title,
+                  description: vals.description,
+                  audience: vals.audience,
+                  estimatedHours: Number(vals.estimatedHours) || 4,
+                  status: "draft",
+                  createdBy: "platform",
+                  tenantId: null,
+                  publishedAt: null,
+                };
+                CM_COURSES.push(newCourse);
+                setCmCourses([...CM_COURSES]);
+                showToast(`Draft course "${vals.title}" created`);
+              },
+            })}
+              className="text-xs px-2.5 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">+ New course</button>
           </div>
-          {CM_COURSES.map(course => {
+          {cmCourses.map(course => {
             const mods = CM_MODULES.filter(m => m.courseId === course.id);
             const enrolled = CM_ENROLLMENTS.length;
             return (
@@ -6386,12 +6483,29 @@ function SysAdminContent({ showToast }) {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-800">{course.title}</div>
                     <div className="text-xs text-slate-500 mt-0.5">{course.description}</div>
-                    <div className="text-xs text-slate-500 mt-1">~{course.estimatedHours}h · {mods.length} modules · {course.tier} tier · Published {course.publishedAt}</div>
+                    <div className="text-xs text-slate-500 mt-1">~{course.estimatedHours}h · {mods.length} modules · Published {course.publishedAt}</div>
                   </div>
                   <div className="flex gap-2 items-center flex-wrap shrink-0">
                     <Pill className="bg-emerald-100 text-emerald-800">{course.status}</Pill>
                     <span className="text-xs text-slate-500">{enrolled} enrolled</span>
-                    <button onClick={() => showToast(`Edit "${course.title}" — Phase 2 ships the slide/quiz editor`)}
+                    <button onClick={() => setDialog({
+                      title: `Edit course`,
+                      description: `Update metadata for "${course.title}".`,
+                      fields: [
+                        { name: "title",          label: "Title",           type: "text",   required: true,  defaultValue: course.title },
+                        { name: "description",    label: "Description",     type: "text",   required: false, defaultValue: course.description },
+                        { name: "estimatedHours", label: "Est. Hours",      type: "text",   required: false, defaultValue: String(course.estimatedHours || "") },
+                        { name: "status",         label: "Status",          type: "select", required: true,  defaultValue: course.status,
+                          options: [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }, { value: "archived", label: "Archived" }] },
+                      ],
+                      submitLabel: "Save",
+                      onSubmit: (vals) => {
+                        const idx = CM_COURSES.findIndex(c => c.id === course.id);
+                        if (idx !== -1) { CM_COURSES[idx] = { ...CM_COURSES[idx], ...vals, estimatedHours: Number(vals.estimatedHours) || course.estimatedHours }; }
+                        setCmCourses([...CM_COURSES]);
+                        showToast(`"${vals.title}" updated`);
+                      },
+                    })}
                       className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50">Edit</button>
                   </div>
                 </div>
@@ -6439,7 +6553,7 @@ function SysAdminContent({ showToast }) {
                       <td className="px-3 py-2 text-xs text-right tabular-nums text-slate-500">{m.estimatedMinutes}m</td>
                       <td className="px-3 py-2"><Pill className="bg-emerald-100 text-emerald-800">{m.status}</Pill></td>
                       <td className="px-3 py-2 text-xs">
-                        <button onClick={() => showToast(`Edit "${m.title}" — Phase 2 ships the slide editor`)}
+                        <button onClick={() => setSlideEditorMod(m)}
                           className="text-brand-700 hover:underline">Edit</button>
                         {quiz && <span className="text-slate-400 ml-2">{quiz.questions?.length || 0}q quiz</span>}
                       </td>
@@ -6454,8 +6568,30 @@ function SysAdminContent({ showToast }) {
 
       {tab === "sequences" && (
         <div className="space-y-3">
-          <div className="text-xs text-slate-500">Sequences are ordered learning paths. Each sequence references courses and carries an authority-unlock spec applied on completion.</div>
-          {CM_SEQUENCES.map(seq => {
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            <div className="text-xs text-slate-500">Sequences are ordered learning paths. Each sequence references courses and carries an authority-unlock spec applied on completion.</div>
+            <button onClick={() => setDialog({
+              title: "New sequence",
+              description: "Create a new learning sequence.",
+              fields: [
+                { name: "title",       label: "Name",        type: "text",   required: true,  defaultValue: "" },
+                { name: "description", label: "Description", type: "text",   required: false, defaultValue: "" },
+                { name: "audience",    label: "Audience",    type: "select", required: true,  defaultValue: "analyst",
+                  options: [{ value: "analyst", label: "Analyst" }] },
+                { name: "status",      label: "Status",      type: "select", required: true,  defaultValue: "draft",
+                  options: [{ value: "draft", label: "Draft" }, { value: "published", label: "Published" }] },
+              ],
+              submitLabel: "Create",
+              onSubmit: (vals) => {
+                const newSeq = { id: `seq_${Date.now()}`, ...vals, courseIds: [], createdBy: "platform", tenantId: null };
+                CM_SEQUENCES.push(newSeq);
+                setCmSequences([...CM_SEQUENCES]);
+                showToast(`Sequence "${vals.title}" created`);
+              },
+            })}
+              className="text-xs px-2.5 py-1.5 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50">+ New sequence</button>
+          </div>
+          {cmSequences.map(seq => {
             const course = CM_COURSES.find(c => c.id === seq.courseIds[0]);
             const enrolled = CM_ENROLLMENTS.filter(e => e.sequenceId === seq.id).length;
             return (
@@ -6464,7 +6600,7 @@ function SysAdminContent({ showToast }) {
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-800">{seq.title}</div>
                     <div className="text-xs text-slate-500 mt-0.5">{seq.description}</div>
-                    <div className="text-xs text-slate-500 mt-1">Target: {seq.targetRole} · {seq.courseIds.length} course · {enrolled} enrolled</div>
+                    <div className="text-xs text-slate-500 mt-1">Target: {seq.audience} · {seq.courseIds.length} course · {enrolled} enrolled</div>
                     {seq.unlockOnCompletion && (
                       <div className="text-xs text-amber-700 mt-1">
                         Unlock on completion: +{fmtMoney(seq.unlockOnCompletion.authorityBoost.settlement)} settlement · +{fmtMoney(seq.unlockOnCompletion.authorityBoost.demand)} demand
@@ -6488,7 +6624,7 @@ function SysAdminContent({ showToast }) {
 
       {tab === "quizzes" && (
         <div className="space-y-3">
-          <div className="text-xs text-slate-500">Module MC quizzes require 70% to pass. The FR capstone requires self-attestation after reviewing the model answer.</div>
+          <div className="text-xs text-slate-500">Module MC quizzes require 80% to pass. The FR capstone requires self-attestation after reviewing the model answer.</div>
           {CM_MODULE_QUIZZES.map(quiz => {
             const mod = CM_MODULES.find(m => m.id === quiz.moduleId);
             const attempts = CM_QUIZ_ATTEMPTS.filter(qa => qa.quizId === quiz.id);
@@ -6499,14 +6635,14 @@ function SysAdminContent({ showToast }) {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-slate-800">{quiz.title}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">Module: {mod?.title || "—"} · {(quiz.questions || []).length} questions · 70% to pass</div>
+                    <div className="text-xs text-slate-500 mt-0.5">Module: {mod?.title || "—"} · {(quiz.questions || []).length} questions · 80% to pass</div>
                     {passRate !== null && (
                       <div className="text-xs text-slate-600 mt-1">Pass rate: {passRate}% ({passCount}/{attempts.length} attempts)</div>
                     )}
                   </div>
                   <div className="flex gap-2 items-center shrink-0">
                     <Pill className="bg-blue-100 text-blue-800">MC</Pill>
-                    <button onClick={() => showToast("Quiz editor — Phase 2")}
+                    <button onClick={() => setQuizEditorTarget({ quiz, isCapstone: false })}
                       className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50">Edit</button>
                   </div>
                 </div>
@@ -6534,6 +6670,8 @@ function SysAdminContent({ showToast }) {
                 </div>
               </div>
               <Pill className="bg-violet-100 text-violet-800 shrink-0">FR Capstone</Pill>
+              <button onClick={() => setQuizEditorTarget({ quiz: CM_COURSE_QUIZ, isCapstone: true })}
+                className="text-xs border border-slate-300 px-2 py-1 rounded-md text-slate-700 hover:bg-slate-50 shrink-0">Edit</button>
             </div>
             {CM_COURSE_QUIZ.scenarios?.map(sc => (
               <div key={sc.id} className="mt-2 border-t border-slate-100 pt-2 text-xs text-slate-600">
@@ -6543,6 +6681,567 @@ function SysAdminContent({ showToast }) {
           </div>
         </div>
       )}
+      {slideEditorMod && (
+        <SlideEditor mod={slideEditorMod} onSave={(slides) => { showToast(`Module ${slideEditorMod.order} slides updated · ${slides.length} slides`); setSlideEditorMod(null); }} onClose={() => setSlideEditorMod(null)} />
+      )}
+      {quizEditorTarget && (
+        <QuizEditor quiz={quizEditorTarget.quiz} isCapstone={quizEditorTarget.isCapstone}
+          onSave={(qs, title) => { showToast(`Quiz "${title}" updated · ${qs.length} questions`); setQuizEditorTarget(null); }}
+          onClose={() => setQuizEditorTarget(null)} />
+      )}
+    </div>
+  );
+}
+
+/* ---------- Slide Editor ---------- */
+function SlideEditor({ mod, onSave, onClose }) {
+  const CITATION_TEMPLATES = {
+    "Internal":     "[Module N § Section Title]",
+    "Syllabus":     "[Syllabus Module N]",
+    "Spec":         "[Spec § N.N Rule N]",
+    "WI Admin Code":"[Wis. Admin. Code § Ins 3.40(11)(a)]",
+    "WI Statute":   "[Wis. Stat. § 632.32]",
+    "Case Law":     "[Rimes v. State Farm, 106 Wis. 2d 263 (1982)]",
+    "FH Training":  "[FH Master Deck slide NN]",
+    "FH Handbook":  "[FH Handbook Topic #NNN (Topic Name)]",
+    "CMS":          "[CMS COB Workbook Module N]",
+  };
+
+  const initSlides = () => (mod.slides || []).map((s, i) => ({ ...s, _idx: i }));
+  const [slides, setSlides] = useState(initSlides);
+  const [selected, setSelected] = useState(0);
+  const [preview, setPreview] = useState(false);
+  const [addMenu, setAddMenu] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const bodyRef = useRef(null);
+
+  const currentSlide = slides[selected] || null;
+
+  const updateCurrent = (patch) => {
+    setSlides(ss => ss.map((s, i) => i === selected ? { ...s, ...patch } : s));
+    setDirty(true);
+  };
+
+  const insertCitation = (tmpl) => {
+    const ta = bodyRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const before = (currentSlide.body || "").slice(0, start);
+    const after  = (currentSlide.body || "").slice(end);
+    const newBody = before + tmpl + after;
+    updateCurrent({ body: newBody });
+    setTimeout(() => { ta.focus(); ta.setSelectionRange(start + tmpl.length, start + tmpl.length); }, 0);
+  };
+
+  const addSlide = (type) => {
+    setAddMenu(false);
+    if (type === "pdf") {
+      const input = document.createElement("input");
+      input.type = "file"; input.accept = ".pdf";
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setPdfLoading(true);
+        setTimeout(() => {
+          const newSlides = [1, 2, 3].map((p, i) => ({
+            id: `imported_${Date.now()}_${i}`,
+            type: "imported",
+            image_url: "",
+            caption: `Imported page ${p} of ${file.name}`,
+            source_pdf: file.name,
+            source_page: p,
+            _idx: slides.length + i,
+          }));
+          setSlides(ss => [...ss, ...newSlides]);
+          setSelected(slides.length);
+          setDirty(true);
+          setPdfLoading(false);
+        }, 1000);
+      };
+      input.click();
+      return;
+    }
+    const base = type === "image"
+      ? { id: `img_${Date.now()}`, type: "image", image_url: "", caption: "", body: "" }
+      : { id: `txt_${Date.now()}`, type: "text", heading: "", body: "" };
+    setSlides(ss => [...ss, { ...base, _idx: ss.length }]);
+    setSelected(slides.length);
+    setDirty(true);
+  };
+
+  const moveSlide = (from, dir) => {
+    const to = from + dir;
+    if (to < 0 || to >= slides.length) return;
+    const next = [...slides];
+    [next[from], next[to]] = [next[to], next[from]];
+    setSlides(next);
+    setSelected(to);
+    setDirty(true);
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    updateCurrent({ image_url: url, _filename: file.name });
+  };
+
+  const handleSave = () => {
+    const finalSlides = slides.map(({ _idx, _filename, ...rest }, i) => ({ ...rest, order: i + 1 }));
+    const idx = CM_MODULES.findIndex(m => m.id === mod.id);
+    if (idx !== -1) CM_MODULES[idx].slides = finalSlides;
+    setDirty(false);
+    onSave(finalSlides);
+  };
+
+  const SLIDE_TYPE_ICONS = {
+    text:     "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+    image:    "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z",
+    imported: "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10",
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2" style={{ background: "rgba(15,23,42,0.6)" }}>
+      <div className="relative bg-white rounded-lg shadow-2xl w-full flex flex-col fade-in" style={{ maxWidth: 1000, height: "92vh" }}>
+        {/* Header */}
+        <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <div className="text-sm font-semibold text-slate-800">Slide Editor — {mod.title}</div>
+            <div className="text-xs text-slate-500">{slides.length} slide{slides.length !== 1 ? "s" : ""}{dirty ? " · " : ""}{dirty && <span className="text-amber-600">Unsaved changes</span>}</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPreview(p => !p)}
+              className={`text-xs px-2.5 py-1 rounded-md border ${preview ? "bg-slate-800 text-white border-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>
+              {preview ? "Edit" : "Preview"}
+            </button>
+            <button onClick={handleSave} disabled={!dirty}
+              className={`text-xs px-3 py-1.5 rounded-md text-white ${dirty ? "bg-brand-600 hover:bg-brand-700" : "bg-slate-300 cursor-not-allowed"}`}>
+              Save
+            </button>
+            <button onClick={() => { if (!dirty || confirm("Discard unsaved changes?")) onClose(); }}
+              className="p-1.5 hover:bg-slate-100 rounded">
+              <Icon d={ICONS.close} className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left rail */}
+          <div className="w-56 shrink-0 border-r border-slate-200 flex flex-col bg-slate-50">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {slides.map((s, i) => (
+                <div key={s.id || i}
+                  className={`group flex items-center gap-1.5 rounded-md px-2 py-1.5 cursor-pointer text-xs ${i === selected ? "bg-brand-100 text-brand-800" : "hover:bg-slate-200 text-slate-700"}`}
+                  onClick={() => { setSelected(i); setPreview(false); }}>
+                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d={SLIDE_TYPE_ICONS[s.type] || SLIDE_TYPE_ICONS.text} />
+                  </svg>
+                  <span className="flex-1 truncate">{s.heading || s.caption || `Slide ${i + 1}`}</span>
+                  <div className="hidden group-hover:flex flex-col gap-0.5">
+                    <button onClick={e => { e.stopPropagation(); moveSlide(i, -1); }} className="hover:text-brand-700 leading-none">▲</button>
+                    <button onClick={e => { e.stopPropagation(); moveSlide(i, 1);  }} className="hover:text-brand-700 leading-none">▼</button>
+                  </div>
+                </div>
+              ))}
+              {slides.length === 0 && <div className="text-xs text-slate-400 italic px-2 py-4">No slides yet. Add one below.</div>}
+            </div>
+            {/* Add Slide menu */}
+            <div className="relative border-t border-slate-200 p-2">
+              {pdfLoading && <div className="text-xs text-slate-500 px-2 py-1.5 text-center animate-pulse">Importing PDF pages…</div>}
+              {!pdfLoading && (
+                <>
+                  <button onClick={() => setAddMenu(m => !m)}
+                    className="w-full text-xs px-2 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+                    + Add Slide
+                  </button>
+                  {addMenu && (
+                    <div className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-slate-200 rounded-md shadow-lg text-xs overflow-hidden z-10">
+                      {[["text", "Text"], ["image", "Image"], ["pdf", "PDF Import"]].map(([t, l]) => (
+                        <button key={t} onClick={() => addSlide(t)}
+                          className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700">{l}</button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Main pane */}
+          <div className="flex-1 overflow-y-auto p-4">
+            {!currentSlide ? (
+              <div className="h-full flex items-center justify-center text-sm text-slate-400 italic">Select or add a slide.</div>
+            ) : preview ? (
+              /* Preview mode */
+              <div className="max-w-xl mx-auto bg-slate-50 border border-slate-200 rounded-lg p-6">
+                {currentSlide.type === "text" && (
+                  <>
+                    {currentSlide.heading && <h2 className="text-lg font-semibold text-slate-800 mb-3">{currentSlide.heading}</h2>}
+                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{currentSlide.body}</p>
+                  </>
+                )}
+                {currentSlide.type === "image" && (
+                  <>
+                    {currentSlide.image_url
+                      ? <img src={currentSlide.image_url} alt={currentSlide.caption} className="w-full rounded mb-3 object-contain" style={{ maxHeight: 360 }} />
+                      : <div className="w-full h-48 bg-slate-200 rounded mb-3 flex items-center justify-center text-slate-400 text-sm">No image uploaded</div>
+                    }
+                    {currentSlide.caption && <div className="text-xs text-slate-500 italic text-center mb-2">{currentSlide.caption}</div>}
+                    {currentSlide.body && <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{currentSlide.body}</p>}
+                  </>
+                )}
+                {currentSlide.type === "imported" && (
+                  <>
+                    <div className="w-full h-48 bg-slate-200 rounded mb-3 flex items-center justify-center text-slate-400 text-sm">
+                      {currentSlide.source_pdf ? `${currentSlide.source_pdf} — p.${currentSlide.source_page}` : "Imported page"}
+                    </div>
+                    {currentSlide.caption && <div className="text-xs text-slate-500 italic text-center">{currentSlide.caption}</div>}
+                  </>
+                )}
+              </div>
+            ) : (
+              /* Edit mode */
+              <div className="space-y-4 max-w-2xl">
+                {currentSlide.type === "text" && (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">Heading</label>
+                      <input value={currentSlide.heading || ""} onChange={e => updateCurrent({ heading: e.target.value })}
+                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                        placeholder="Slide heading" />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-medium text-slate-600">Body (Markdown)</label>
+                      </div>
+                      {/* Citation helpers */}
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {Object.entries(CITATION_TEMPLATES).map(([label, tmpl]) => (
+                          <button key={label} onClick={() => insertCitation(tmpl)}
+                            className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200">
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea ref={bodyRef} value={currentSlide.body || ""}
+                        onChange={e => updateCurrent({ body: e.target.value })} rows={20}
+                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
+                        placeholder="Slide body in Markdown…" />
+                    </div>
+                  </>
+                )}
+                {currentSlide.type === "image" && (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">Image</label>
+                      {currentSlide.image_url
+                        ? <div className="mb-2"><img src={currentSlide.image_url} className="max-h-48 rounded border border-slate-200 object-contain" alt="" /></div>
+                        : null
+                      }
+                      <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors">
+                        <div className="text-xs text-slate-500">Click to upload image (stored locally)</div>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                      </label>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">Caption</label>
+                      <input value={currentSlide.caption || ""} onChange={e => updateCurrent({ caption: e.target.value })}
+                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                        placeholder="Image caption" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">Body (optional Markdown)</label>
+                      <textarea value={currentSlide.body || ""} onChange={e => updateCurrent({ body: e.target.value })} rows={8}
+                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
+                        placeholder="Optional body text…" />
+                    </div>
+                  </>
+                )}
+                {currentSlide.type === "imported" && (
+                  <>
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700">
+                      <div className="font-medium mb-1">Imported slide — read-only</div>
+                      <div className="text-xs text-slate-500">Source: {currentSlide.source_pdf || "unknown PDF"} · Page {currentSlide.source_page || "?"}</div>
+                      <div className="mt-3 h-32 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs">PDF page thumbnail (Phase 2: real rendering)</div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 block mb-1">Caption (editable)</label>
+                      <input value={currentSlide.caption || ""} onChange={e => updateCurrent({ caption: e.target.value })}
+                        className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                        placeholder="Caption" />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Quiz Editor ---------- */
+function QuizEditor({ quiz, isCapstone, onSave, onClose }) {
+  const isFR = isCapstone || quiz.type === "free_response";
+  const initQuestions = () => (quiz.questions || (quiz.scenarios ? quiz.scenarios.map((sc, i) => ({
+    id: sc.id, type: "free_response",
+    stem: `${sc.facts}\n\nPrompts:\n${sc.prompts.map((p, pi) => `${pi + 1}. ${p}`).join("\n")}`,
+    model_answer: sc.modelAnswer, grading_rubric: "(See model answer walkthrough above)",
+    topic: sc.title, _scIdx: i,
+  })) : []));
+
+  const [title, setTitle] = useState(quiz.title || "");
+  const [description, setDescription] = useState(quiz.description || "");
+  const [passThreshold, setPassThreshold] = useState(quiz.passThreshold ?? 80);
+  const [questions, setQuestions] = useState(initQuestions);
+  const [selectedQ, setSelectedQ] = useState(questions.length > 0 ? 0 : null);
+  const [dirty, setDirty] = useState(false);
+  const [previewQ, setPreviewQ] = useState({});
+  const [showAnswer, setShowAnswer] = useState({});
+  const [addTypeMenu, setAddTypeMenu] = useState(false);
+
+  const currentQ = selectedQ !== null ? questions[selectedQ] : null;
+
+  const updateQ = (patch) => {
+    setQuestions(qs => qs.map((q, i) => i === selectedQ ? { ...q, ...patch } : q));
+    setDirty(true);
+  };
+
+  const moveQ = (from, dir) => {
+    const to = from + dir;
+    if (to < 0 || to >= questions.length) return;
+    const next = [...questions];
+    [next[from], next[to]] = [next[to], next[from]];
+    setQuestions(next);
+    setSelectedQ(to);
+    setDirty(true);
+  };
+
+  const addQuestion = (type) => {
+    setAddTypeMenu(false);
+    const base = type === "free_response"
+      ? { id: `q_fr_${Date.now()}`, type: "free_response", stem: "", topic: "", model_answer: "", grading_rubric: "" }
+      : { id: `q_mc_${Date.now()}`, type: "multiple_choice", stem: "", topic: "", options: { a: "", b: "", c: "", d: "" }, answer: "a", rationale: "" };
+    setQuestions(qs => [...qs, base]);
+    setSelectedQ(questions.length);
+    setDirty(true);
+  };
+
+  const handleSave = () => {
+    const finalQuestions = questions.map(({ _scIdx, ...rest }, i) => ({ ...rest, order: i + 1 }));
+    if (isCapstone) {
+      CM_COURSE_QUIZ.title = title;
+    } else {
+      const idx = CM_MODULE_QUIZZES.findIndex(q => q.id === quiz.id);
+      if (idx !== -1) {
+        CM_MODULE_QUIZZES[idx].title = title;
+        CM_MODULE_QUIZZES[idx].passThreshold = passThreshold;
+        CM_MODULE_QUIZZES[idx].questions = finalQuestions;
+      }
+    }
+    setDirty(false);
+    onSave(finalQuestions, title);
+  };
+
+  const TYPE_BADGE = { multiple_choice: "MC", free_response: "FR" };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2" style={{ background: "rgba(15,23,42,0.6)" }}>
+      <div className="relative bg-white rounded-lg shadow-2xl w-full flex flex-col fade-in" style={{ maxWidth: 900, height: "92vh" }}>
+        {/* Header */}
+        <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between shrink-0">
+          <div>
+            <div className="text-sm font-semibold text-slate-800">Quiz Editor{isCapstone ? " (FR Capstone)" : ""}</div>
+            <div className="text-xs text-slate-500">{questions.length} question{questions.length !== 1 ? "s" : ""}{dirty ? " · " : ""}{dirty && <span className="text-amber-600">Unsaved changes</span>}</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={handleSave} disabled={!dirty}
+              className={`text-xs px-3 py-1.5 rounded-md text-white ${dirty ? "bg-brand-600 hover:bg-brand-700" : "bg-slate-300 cursor-not-allowed"}`}>
+              Save
+            </button>
+            <button onClick={() => { if (!dirty || confirm("Discard unsaved changes?")) onClose(); }}
+              className="p-1.5 hover:bg-slate-100 rounded">
+              <Icon d={ICONS.close} className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {/* Quiz-level fields */}
+          <div className="p-4 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">Quiz Title</label>
+              <input value={title} onChange={e => { setTitle(e.target.value); setDirty(true); }}
+                className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-600 block mb-1">
+                {isCapstone || isFR ? "Completion" : "Pass Threshold (%)"}
+              </label>
+              {isCapstone || isFR
+                ? <div className="text-sm text-slate-500 px-3 py-2 bg-slate-50 border border-slate-200 rounded-md">Completion-based (self-attestation)</div>
+                : <input type="number" min={0} max={100} value={passThreshold}
+                    onChange={e => { setPassThreshold(Number(e.target.value)); setDirty(true); }}
+                    className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+              }
+            </div>
+          </div>
+
+          <div className="flex flex-1" style={{ minHeight: 0 }}>
+            {/* Question list */}
+            <div className="w-52 shrink-0 border-r border-slate-200 bg-slate-50 flex flex-col">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                {questions.map((q, i) => (
+                  <div key={q.id || i}
+                    className={`group flex items-center gap-1.5 rounded-md px-2 py-1.5 cursor-pointer text-xs ${i === selectedQ ? "bg-brand-100 text-brand-800" : "hover:bg-slate-200 text-slate-700"}`}
+                    onClick={() => setSelectedQ(i)}>
+                    <span className="shrink-0 px-1 py-0.5 rounded text-[10px] font-medium bg-slate-200 text-slate-700">{TYPE_BADGE[q.type] || "MC"}</span>
+                    <span className="flex-1 truncate">Q{i + 1}. {q.stem ? q.stem.slice(0, 30) : "(empty)"}</span>
+                    <div className="hidden group-hover:flex flex-col gap-0.5">
+                      <button onClick={e => { e.stopPropagation(); moveQ(i, -1); }} className="hover:text-brand-700 leading-none">▲</button>
+                      <button onClick={e => { e.stopPropagation(); moveQ(i, 1);  }} className="hover:text-brand-700 leading-none">▼</button>
+                    </div>
+                  </div>
+                ))}
+                {questions.length === 0 && <div className="text-xs text-slate-400 italic px-2 py-4">No questions yet.</div>}
+              </div>
+              <div className="relative border-t border-slate-200 p-2">
+                <button onClick={() => setAddTypeMenu(m => !m)}
+                  className="w-full text-xs px-2 py-1.5 bg-brand-600 text-white rounded-md hover:bg-brand-700">
+                  + Add Question
+                </button>
+                {addTypeMenu && (
+                  <div className="absolute bottom-full left-2 right-2 mb-1 bg-white border border-slate-200 rounded-md shadow-lg text-xs overflow-hidden z-10">
+                    <button onClick={() => addQuestion("multiple_choice")} className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700">Multiple Choice</button>
+                    <button onClick={() => addQuestion("free_response")}   className="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700">Free Response</button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Question editor */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {currentQ === null ? (
+                <div className="h-full flex items-center justify-center text-sm text-slate-400 italic">Select or add a question.</div>
+              ) : (
+                <div className="space-y-4 max-w-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-700 uppercase tracking-wide">
+                      Q{selectedQ + 1} — {currentQ.type === "free_response" ? "Free Response" : "Multiple Choice"}
+                    </span>
+                    <button onClick={() => setPreviewQ(p => ({ ...p, [selectedQ]: !p[selectedQ] }))}
+                      className={`text-xs px-2.5 py-1 rounded-md border ${previewQ[selectedQ] ? "bg-slate-800 text-white border-slate-800" : "border-slate-300 text-slate-700 hover:bg-slate-50"}`}>
+                      {previewQ[selectedQ] ? "Edit" : "Preview"}
+                    </button>
+                  </div>
+
+                  {previewQ[selectedQ] ? (
+                    /* Question preview */
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                      <div className="text-sm font-medium text-slate-800 whitespace-pre-wrap">{currentQ.stem || "(no stem)"}</div>
+                      {currentQ.type === "multiple_choice" && (
+                        <>
+                          <div className="space-y-1.5">
+                            {["a", "b", "c", "d"].map(k => (
+                              <div key={k} className={`text-xs px-3 py-2 rounded border ${showAnswer[selectedQ] && k === currentQ.answer ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-700"}`}>
+                                <span className="font-mono text-slate-400 mr-1">{k}.</span> {currentQ.options?.[k] || "(empty)"}
+                                {showAnswer[selectedQ] && k === currentQ.answer && <span className="ml-2 font-semibold">✓</span>}
+                              </div>
+                            ))}
+                          </div>
+                          <button onClick={() => setShowAnswer(s => ({ ...s, [selectedQ]: !s[selectedQ] }))}
+                            className="text-xs text-brand-700 hover:underline">
+                            {showAnswer[selectedQ] ? "Hide answer" : "Show answer"}
+                          </button>
+                          {showAnswer[selectedQ] && currentQ.rationale && (
+                            <div className="text-xs text-slate-600 italic">{currentQ.rationale}</div>
+                          )}
+                        </>
+                      )}
+                      {currentQ.type === "free_response" && (
+                        <>
+                          <button onClick={() => setShowAnswer(s => ({ ...s, [selectedQ]: !s[selectedQ] }))}
+                            className="text-xs text-brand-700 hover:underline">
+                            {showAnswer[selectedQ] ? "Hide model answer" : "Show model answer"}
+                          </button>
+                          {showAnswer[selectedQ] && (
+                            <div className="bg-white border border-slate-200 rounded p-3 text-xs text-slate-700 whitespace-pre-wrap">{currentQ.model_answer}</div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ) : (
+                    /* Question edit */
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-slate-600 block mb-1">
+                          {currentQ.type === "free_response" ? "Stem (facts + prompts)" : "Stem"}
+                        </label>
+                        <textarea value={currentQ.stem || ""} onChange={e => updateQ({ stem: e.target.value })}
+                          rows={currentQ.type === "free_response" ? 10 : 6}
+                          className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-slate-600 block mb-1">Topic (analytics)</label>
+                        <input value={currentQ.topic || ""} onChange={e => updateQ({ topic: e.target.value })}
+                          className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                          placeholder="e.g. Made-whole doctrine" />
+                      </div>
+
+                      {currentQ.type === "multiple_choice" && (
+                        <>
+                          <div>
+                            <label className="text-xs font-medium text-slate-600 block mb-1">Options</label>
+                            <div className="space-y-2">
+                              {["a", "b", "c", "d"].map(k => (
+                                <div key={k} className="flex items-center gap-2">
+                                  <input type="radio" name={`correct_${selectedQ}`} checked={currentQ.answer === k}
+                                    onChange={() => updateQ({ answer: k })} className="text-brand-600 shrink-0" />
+                                  <span className="font-mono text-xs text-slate-500 w-4">{k}.</span>
+                                  <input value={currentQ.options?.[k] || ""} onChange={e => updateQ({ options: { ...currentQ.options, [k]: e.target.value } })}
+                                    className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand-400"
+                                    placeholder={`Option ${k}`} />
+                                </div>
+                              ))}
+                            </div>
+                            <div className="text-[10px] text-slate-400 mt-1">Select the radio button next to the correct answer.</div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-slate-600 block mb-1">Explanation (shown after submission)</label>
+                            <textarea value={currentQ.rationale || ""} onChange={e => updateQ({ rationale: e.target.value })} rows={4}
+                              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
+                              placeholder="Why is this the correct answer? Why are the other options wrong?" />
+                          </div>
+                        </>
+                      )}
+
+                      {currentQ.type === "free_response" && (
+                        <>
+                          <div>
+                            <label className="text-xs font-medium text-slate-600 block mb-1">Model Answer Walkthrough</label>
+                            <textarea value={currentQ.model_answer || ""} onChange={e => updateQ({ model_answer: e.target.value })} rows={12}
+                              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
+                              placeholder="Step-by-step model answer shown after learner submits…" />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-slate-600 block mb-1">Grading Rubric</label>
+                            <textarea value={currentQ.grading_rubric || ""} onChange={e => updateQ({ grading_rubric: e.target.value })} rows={6}
+                              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
+                              placeholder="Rubric points: what a complete answer must include…" />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
