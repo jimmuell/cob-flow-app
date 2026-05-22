@@ -3,7 +3,7 @@
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { CourseFormInput } from '../actions/course';
+import type { CourseFormInput } from '../schemas/course';
 
 const UNLOCK_TYPES = [
   { value: 'settlement',          label: 'Settlement authority' },

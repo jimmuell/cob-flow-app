@@ -1,23 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { eq, max } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { lessons } from '@/lib/db/schema/content';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
+import { lessonCreateSchema } from '../schemas/lesson';
+import type { LessonCreateInput } from '../schemas/lesson';
 
-// ─── Schema ────────────────────────────────────────────────────────────────────
-
-export const lessonCreateSchema = z.object({
-  title:       z.string().min(1, 'Title is required').max(300),
-  slug:        z.string().min(1, 'Slug is required').max(100).regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, and hyphens only'),
-  lesson_type: z.enum(['overview', 'reading-guide', 'summary', 'worked-example']),
-});
-
-export type LessonCreateInput = z.infer<typeof lessonCreateSchema>;
+export type { LessonCreateInput };
 
 type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string };
 

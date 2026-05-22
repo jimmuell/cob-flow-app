@@ -9,12 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { UnlockDefinitionEditor } from './unlock-definition-editor';
-import {
-  moduleFormSchema,
-  type ModuleFormInput,
-  createModule,
-  updateModule,
-} from '../actions/module';
+import { moduleFormSchema } from '../schemas/module';
+import type { ModuleFormInput } from '../schemas/module';
+import { createModule, updateModule } from '../actions/module';
 
 interface ModuleFormProps {
   courseId: string;

@@ -8,12 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  sequenceFormSchema,
-  type SequenceFormInput,
-  createSequence,
-  updateSequence,
-} from '../actions/sequence';
+import { sequenceFormSchema } from '../schemas/sequence';
+import type { SequenceFormInput } from '../schemas/sequence';
+import { createSequence, updateSequence } from '../actions/sequence';
 
 interface SequenceFormProps {
   sequenceId?: string;

@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
@@ -9,17 +8,10 @@ import { courseSequences } from '@/lib/db/schema/content';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
 import { getDbUserId } from '@/lib/auth/db-user-id';
+import { sequenceFormSchema } from '../schemas/sequence';
+import type { SequenceFormInput } from '../schemas/sequence';
 
-// ─── Schemas ──────────────────────────────────────────────────────────────────
-
-export const sequenceFormSchema = z.object({
-  name:        z.string().min(1, 'Name is required').max(200),
-  slug:        z.string().min(1, 'Slug is required').max(100).regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, and hyphens only'),
-  description: z.string().optional(),
-  audience:    z.literal('analyst'),
-});
-
-export type SequenceFormInput = z.infer<typeof sequenceFormSchema>;
+export type { SequenceFormInput };
 
 // ─── Result type ──────────────────────────────────────────────────────────────
 

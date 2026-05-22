@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
 import { eq, max, gte, sql } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
@@ -9,22 +8,11 @@ import { modules } from '@/lib/db/schema/content';
 import { platformAuthorityCeilings } from '@/lib/db/schema/authority';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
+import { moduleFormSchema } from '../schemas/module';
+import type { ModuleFormInput } from '../schemas/module';
+import type { UnlockItem } from '../schemas/course';
 
-// ─── Schemas ──────────────────────────────────────────────────────────────────
-
-const unlockItemSchema = z.object({
-  unlock_type:  z.enum(['settlement', 'demand', 'lien_reduction', 'closure', 'letter_override', 'template_publication']),
-  unlock_value: z.number().positive(),
-});
-
-export const moduleFormSchema = z.object({
-  title:             z.string().min(1, 'Title is required').max(300),
-  slug:              z.string().min(1, 'Slug is required').max(100).regex(/^[a-z0-9-]+$/, 'Lowercase letters, numbers, and hyphens only'),
-  description:       z.string().optional(),
-  unlock_definition: z.array(unlockItemSchema).optional(),
-});
-
-export type ModuleFormInput = z.infer<typeof moduleFormSchema>;
+export type { ModuleFormInput };
 
 // ─── Result type ──────────────────────────────────────────────────────────────
 
@@ -37,9 +25,9 @@ type ActionResult<T = void> =
 type TxType = Parameters<Parameters<typeof withCurrentSession>[0]>[0];
 
 async function clampUnlockDefinition(
-  items: z.infer<typeof unlockItemSchema>[],
+  items: UnlockItem[],
   tx: TxType,
-): Promise<z.infer<typeof unlockItemSchema>[]> {
+): Promise<UnlockItem[]> {
   if (items.length === 0) return items;
   const ceilings = await tx.select().from(platformAuthorityCeilings);
   const ceilingMap = new Map(ceilings.map((c) => [c.unlock_type, Number(c.ceiling_value)]));

@@ -9,12 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { UnlockDefinitionEditor } from './unlock-definition-editor';
-import {
-  courseFormSchema,
-  type CourseFormInput,
-  createCourse,
-  updateCourse,
-} from '../actions/course';
+import { courseFormSchema } from '../schemas/course';
+import type { CourseFormInput } from '../schemas/course';
+import { createCourse, updateCourse } from '../actions/course';
 
 interface SequenceOption {
   id: string;
