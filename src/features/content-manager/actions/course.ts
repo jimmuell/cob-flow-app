@@ -12,8 +12,6 @@ import { getDbUserId } from '@/lib/auth/db-user-id';
 import { courseFormSchema } from '../schemas/course';
 import type { CourseFormInput, UnlockItem } from '../schemas/course';
 
-export type { CourseFormInput, UnlockItem };
-
 // ─── Result type ──────────────────────────────────────────────────────────────
 
 type ActionResult<T = void> =

@@ -6,10 +6,6 @@ import { withCurrentSession } from '@/lib/db/client';
 import { quizzes } from '@/lib/db/schema/content';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
-import type { QuizCreateInput } from '../schemas/quiz';
-
-export type { QuizCreateInput };
-
 type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string };
 
 // ─── Actions ───────────────────────────────────────────────────────────────────

@@ -12,8 +12,6 @@ import { moduleFormSchema } from '../schemas/module';
 import type { ModuleFormInput } from '../schemas/module';
 import type { UnlockItem } from '../schemas/course';
 
-export type { ModuleFormInput };
-
 // ─── Result type ──────────────────────────────────────────────────────────────
 
 type ActionResult<T = void> =

@@ -11,8 +11,6 @@ import { getDbUserId } from '@/lib/auth/db-user-id';
 import { sequenceFormSchema } from '../schemas/sequence';
 import type { SequenceFormInput } from '../schemas/sequence';
 
-export type { SequenceFormInput };
-
 // ─── Result type ──────────────────────────────────────────────────────────────
 
 type ActionResult<T = void> =

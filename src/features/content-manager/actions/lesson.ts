@@ -10,8 +10,6 @@ import { canPerform } from '@/lib/authority/can-perform';
 import { lessonCreateSchema } from '../schemas/lesson';
 import type { LessonCreateInput } from '../schemas/lesson';
 
-export type { LessonCreateInput };
-
 type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string };
 
 // ─── Action ────────────────────────────────────────────────────────────────────
