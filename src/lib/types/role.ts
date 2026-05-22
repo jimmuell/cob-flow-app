@@ -10,4 +10,8 @@ export interface AuthorityBands {
   demand: number;
   lienReduction: number;
   closure: number;
+  /** Binary capability (0 = not granted, 1 = granted): override template letter selections. */
+  letterOverride: number;
+  /** Binary capability (0 = not granted, 1 = granted): publish new letter templates. */
+  templatePublication: number;
 }

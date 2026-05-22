@@ -7,27 +7,27 @@ export const USERS: User[] = [
   {
     id: "u_jm", name: "J. Mueller", initials: "JM", role: "ANALYST", status: "ACTIVE",
     teamId: "team_a", level: "SENIOR",
-    authority: { settlement: 50000, demand: 75000, lienReduction: 0.35, closure: 75000 },
+    authority: { settlement: 50000, demand: 75000, lienReduction: 0.35, closure: 75000, letterOverride: 1, templatePublication: 0 },
   },
   {
     id: "u_kn", name: "K. Nguyen", initials: "KN", role: "ANALYST", status: "ACTIVE",
     teamId: "team_a", level: "MID",
-    authority: { settlement: 25000, demand: 35000, lienReduction: 0.25, closure: 35000 },
+    authority: { settlement: 25000, demand: 35000, lienReduction: 0.25, closure: 35000, letterOverride: 0, templatePublication: 0 },
   },
   {
     id: "u_aw", name: "A. Whitfield", initials: "AW", role: "ANALYST", status: "ACTIVE",
     teamId: "team_a", level: "JUNIOR",
-    authority: { settlement: 10000, demand: 20000, lienReduction: 0.20, closure: 20000 },
+    authority: { settlement: 10000, demand: 20000, lienReduction: 0.20, closure: 20000, letterOverride: 0, templatePublication: 0 },
   },
   {
     id: "u_ml", name: "M. Lindgren", initials: "ML", role: "ANALYST", status: "ACTIVE",
     teamId: "team_b", level: "MID",
-    authority: { settlement: 25000, demand: 35000, lienReduction: 0.25, closure: 35000 },
+    authority: { settlement: 25000, demand: 35000, lienReduction: 0.25, closure: 35000, letterOverride: 0, templatePublication: 0 },
   },
   {
     id: "u_dp", name: "D. Pemberton", initials: "DP", role: "ANALYST", status: "ACTIVE",
     teamId: "team_b", level: "MID",
-    authority: { settlement: 25000, demand: 35000, lienReduction: 0.25, closure: 35000 },
+    authority: { settlement: 25000, demand: 35000, lienReduction: 0.25, closure: 35000, letterOverride: 0, templatePublication: 0 },
   },
   {
     id: "u_tr", name: "T. Ramos", initials: "TR", role: "SUPERVISOR", status: "ACTIVE",

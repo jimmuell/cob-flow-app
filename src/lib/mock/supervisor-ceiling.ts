@@ -11,4 +11,6 @@ export const SUPERVISOR_CEILING: AuthorityBands = {
   demand: 150000,
   lienReduction: 0.50,
   closure: 150000,
+  letterOverride: 1,
+  templatePublication: 1,
 };
