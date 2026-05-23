@@ -1,6 +1,6 @@
 # COB Flow — Project Handoff
 
-**Last updated:** 2026-05-19 (Next.js conversion handoff packaged; landing/sign-in, ingest architecture, and Tier-1 prototype additions landed)
+**Last updated:** 2026-05-23 (Content Manager build CP1–CP6 shipped; original Phase C deferred pending CM completion)
 **Purpose:** Bring a new session (human or AI) up to speed on the COB Flow project with everything needed to continue without re-discovering context.
 
 > If you only read one thing: this is a pre-revenue SaaS effort by Jim Mueller (Brookfield, WI) to automate healthcare COB primacy determination, auto med-pay/PIP recovery, intake/triage, and recovery correspondence. Wisconsin is the pilot state. The product is positioned as **decision-support** (analyst signs every determination in v1). A working single-file HTML prototype demonstrates the full analyst workflow plus the four-role management/admin model, customer claim feeds, case state lifecycle, and the late-arrival approval flow. **A Next.js conversion handoff (`COB_Flow_NextJS_Conversion_Handoff.md`) is now packaged and ready to pass to Claude Code** — locked stack: Next.js 15 / TypeScript / Tailwind / shadcn/ui / Supabase (auth + DB) / Drizzle / Vercel / GitHub repo `cob-flow-app`. **No customer interviews have happened yet** — that's still GTM Phase 1 and runs in parallel with engineering. The SPD Review Template and Onboarding Playbook remain the front-door instruments for customer discovery.
@@ -30,7 +30,7 @@ If anything in steps 1–5 fails (folder won't mount, files missing, memory unre
 | **Founder** | Jim Mueller — healthcare subrogation SME |
 | **Location** | Brookfield, WI (ZIP 53045) |
 | **Pilot state** | Wisconsin (tort state with made-whole doctrine; **not** no-fault) |
-| **Current phase** | Phase 0 — Foundation (per GTM Roadmap). No customer interviews yet. The Next.js conversion is packaged and ready for Claude Code; that engineering thread can run in parallel with GTM Phase 1 (customer discovery). |
+| **Current phase** | Phase 0 — Foundation (per GTM Roadmap). No customer interviews yet. Engineering scope pivoted mid-conversion: the Content Manager (learning/authority module) was prioritized over original Phase C (read-only workspaces). CP1–CP6 shipped; CP7 next. Original Phase C–H of the Next.js conversion are deferred pending CM completion (post-CP11). See §11. |
 | **Positioning** | Decision-support / analyst assist. Engine recommends, analyst signs. Graduation to autonomous determination is Phase 3 of the product roadmap. |
 | **Working prototype** | `COB_Flow_MVP.html` — single-file React/Babel app, runs in any browser. Demonstrates landing/sign-in, analyst workflow, Management workspace (Supervisor + Manager), Admin workspace (with Customer Feeds + ingest event audit filter), case-state lifecycle pills, manual case-grouping, and the LATE_ARRIVAL_TO_CLOSED_CASE approval flow |
 | **Conversion handoff** | `COB_Flow_NextJS_Conversion_Handoff.md` (v0.3) — the brief for Claude Code. Locked stack (Next.js 15, TypeScript strict, Tailwind, shadcn/ui, Supabase, Drizzle, Vercel, GitHub `cob-flow-app`). Includes ingest architecture (§11), helper TypeScript signatures, env-var list, pre-flight checklist, README skeleton |
@@ -258,7 +258,7 @@ Per `COB_Flow_GTM_Roadmap.docx`:
 
 Once you've completed the required first actions in §0, the live threads Jim is most likely to pick up, in rough order of probability:
 
-- **Hand off the conversion to Claude Code.** `COB_Flow_NextJS_Conversion_Handoff.md` (v0.3) is the single deliverable. Pre-flight checklist is in its Appendix C. Cowork's role from this point is reviewing Claude Code's PRs / questions, not building the app directly.
+- **CP7 of the Content Manager build.** Mirror /admin/content/* at /management/content/* scoped to customer content + session tenant, role-gated to MANAGER+SUPERVISOR. Add the tenant feature flag layout gate for /learn/* and /management/content/*. Implementation plan at `docs/superpowers/plans/CONTENT_MANAGER_IMPLEMENTATION_PLAN.md` CP7 is authoritative. Refreshed kickoff doc at `docs/COB_Flow_Cowork_Kickoff.md` is the next-session entry point.
 - **(Optional) Iterate on spec v0.8.** `COB_Flow_Product_Spec_v0.8.docx` now has the §10.2 Customer claim feeds subsection in spec-appropriate prose. Future minor revisions can expand the standards-based integrations table once Phase 1 customer discovery surfaces real format choices.
 - **GTM Phase 1 prep.** Interview script + week-by-week schedule + synthesis template. SPD Review Template is the front door. The conversion handoff §11.6 lists the seven ingest-format questions to bake into the script.
 - **Customer discovery activity.** Drafting outreach emails, scripting interviews against the target list.
@@ -316,6 +316,31 @@ All 14 acceptance criteria (spec §17) pass; criterion 14 (`not-found.tsx` end-t
 **Schema-timing decision (locked 2026-05-20):** Pass 1 stays fully fixture-based. Phase C reads from typed TypeScript fixtures in `src/lib/mock/` (TENANTS, USERS, SAMPLE_CLAIMS, SAMPLE_RECOVERIES, etc. — already ported from the prototype in Phase A). Drizzle ORM is wired up and `src/lib/db/schema.ts` is a placeholder; no tables are defined. Local Supabase Postgres is running but unused. Real schema design is deferred to pass 2, after GTM Phase 1 customer discovery surfaces what real claim feeds look like and before the HIPAA cost cliff (~$3.5–4k/mo) is crossed. Option 2 (wire one table end-to-end) and Option 3 (full schema design, no data migration) were both considered and deferred.
 
 **Phase C working pattern:** Read-only means render-from-fixtures, no edit forms, no mutations. Lean on Server Components for fixture reads (no client-side data fetching needed). Each workspace is an independent route under `(app)/`; no shell changes required. TanStack Table powers the Claims & Triage list per spec §7. Mobile responsiveness preserved.
+
+---
+
+### Phase C — Deferred (2026-05-22)
+
+Mid-planning, scope pivoted: the Content Manager (learning/authority gating module) was prioritized over original Phase C (Dashboard, Claims & Triage list, Recovery Tracker read-only workspaces). Phase C–H of the original Next.js conversion are now deferred pending Content Manager completion (post-CP11). The Section 3 design review for Phase C that was parked at end of session 2026-05-21 remains parked; it will resume after CM CP11 ships.
+
+Rationale for the pivot: the CM enables authority unlocks driven by course completion (per spec §6), which feeds canPerform() in Phase 2. Building the CM first means Phase 2 authority work can land cleanly on top of real unlock data rather than synthetic fixtures.
+
+### Content Manager build — phase log (2026-05-22 → 2026-05-23)
+
+Spec: `docs/superpowers/specs/CONTENT_MANAGER_SPEC.md` (locked at commit 532dd85, with end-of-session corrections at §3 and §7).
+Plan: `docs/superpowers/plans/CONTENT_MANAGER_IMPLEMENTATION_PLAN.md` (CP1–CP11 roadmap).
+Working session decisions live in `docs/COB_Flow_Cowork_Kickoff.md` History section.
+
+- **CP1 — Foundations.** Dependencies installed; `src/features/content-manager/` scaffolded; `AuditEvent.category` extended with `'LEARNING'`; `AuthorityBands` extended with `letterOverride` and `templatePublication`.
+- **CP2 — Database.** All CM Drizzle tables (course_sequences, courses, modules, lessons, quizzes, quiz_questions, course_enrollments, lesson_completions, quiz_attempts, course_completions, authority_unlocks, platform_authority_ceilings, learning_notifications, pdf_import_jobs); RLS policies; helper functions; recommended indexes. `tenants.features` JSONB and `teams.manager_id` added.
+- **CP3 — Plumbing.** Session-context Drizzle client wrapper at `src/lib/db/client.ts` (sets `app.current_user_id` / `tenant_id` / `role` per query for RLS). `content-assets` Supabase Storage bucket with RLS mirroring content scope.
+- **CP4 — Admin authoring routes.** `/admin/content/*` with sequence/course/module CRUD. Post-CP4 refinements: Sequence→Learning Path rename, cascade archive, Admin-only hard delete for archived content, status filter on the catalog.
+- **CP5 — Slide editor (commit `d2543c2`).** Three-pane editor (rail / main / preview), citation helper bar (9 buttons), synchronous PDF import ≤50 pages via `pdf-to-img`, image upload via service-role Supabase client.
+- **CP6 — Quiz editor (commits `f242d77` → `a2d4207`).** MC + FR modes; pass_threshold input (MC) vs static "Completion-based" label (FR); optimistic concurrency via `updated_at` WHERE clause + DELETE+INSERT for child rows; flat WorkingQuestion state pattern for polymorphic editing; net-new course-quizzes route; Course Quizzes section on course detail.
+- **Side-quest demo seed (commits `a433e77` + `5f02182`).** `scripts/seed-content-manager-demo.ts` — 1 Learning Path / 4 Courses / 12 Modules / 36 Lessons / 16 Quizzes / 48 Questions, all `content_type='platform'`. Idempotent + `--reset` flag. Courses 1+3 capstones MC; Courses 2+4 capstones FR with model answers and rubrics. Auto COB Wisconsin curriculum used as the demo path.
+- **End-of-session cleanup pass (commits `ceeb38e` → `b6c6790`).** Slide image storage refactored to bucket-path + render-time signing (1-hour expiry; eliminates the 1-year signed URL expiry concern from CP5). SQL Admin demo user reconciled (S. Patel → A. Donnelly in seed migration 0004 + migration 0005 fix for already-applied row). Spec §7 + plan CP4/CP5/CP6 route paths corrected to actual flattened layout (no /edit/ subroutes; modules at top-level not nested under courses; quiz/new/ removed). Spec §3 slide JSONB updated to image_path. CLAUDE.md updated with render-time signing convention and full accumulated-conventions catalog.
+- **CP7 — Management authoring routes mirror (next).** Mirror `/admin/content/*` at `/management/content/*` scoped to `content_type='customer'` and session tenant. Role-gated to MANAGER+SUPERVISOR with equal CRUD rights. Tenant feature flag layout gate for `/learn/*` and `/management/content/*` (not `/admin/content/*`).
+- **CP8–CP11.** Learner surface (CP8); completion wiring with unlock grants + notifications + audit events (CP9); async PDF import + oversight surface (CP10); Auto COB Wisconsin course ingestion from `content/courses/auto-cob-wisconsin/` (CP11).
 
 ---
 
