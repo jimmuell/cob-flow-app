@@ -69,6 +69,10 @@ Tenant context is always in the session, never passed as free-floating component
 - **`SENIOR_ANALYST` is not a Role.** Users are `role: "ANALYST"` + `level: "SENIOR"` in the fixtures and type system. The four-role model is canonical: `"ANALYST" | "SUPERVISOR" | "MANAGER" | "ADMIN"`.
 - **Roles helper is the only place for role checks.** No `user.role === "..."` string comparisons in components or pages.
 
+## Content-manager conventions
+
+- **Slide image storage:** persist the Supabase Storage bucket path in the slide JSONB (`image_path` field). Sign at render time via `signSlideImagePath()` / `signSlideImageMap()` (`src/features/content-manager/lib/storage.ts`) with a 1-hour expiry. Never persist signed URLs.
+
 ## Locked decisions
 
 - **Auth pass 1:** cookie-backed mock session; demo-accounts picker on sign-in page. Supabase Auth boundary is wired but not exercised.
