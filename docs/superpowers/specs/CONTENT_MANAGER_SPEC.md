@@ -496,9 +496,11 @@ CREATE INDEX authority_unlocks_active_idx ON authority_unlocks(user_id, unlock_t
 ```typescript
 type Slide =
   | { order: number; type: "text";     heading: string; body_markdown: string }
-  | { order: number; type: "image";    image_url: string; caption: string; body_markdown?: string }
-  | { order: number; type: "imported"; image_url: string; caption: string; source_pdf?: string; source_page?: number };
+  | { order: number; type: "image";    image_path: string; caption: string; body_markdown?: string }
+  | { order: number; type: "imported"; image_path: string; caption: string; source_pdf?: string; source_page?: number };
 ```
+
+> **Note:** `image_path` is a bucket-relative storage path (e.g., `platform/foo-course/foo-module/foo-lesson/abc123.png`), or a local public-asset path beginning with `/` (e.g., `/seed-placeholder.png`). At render time, server components call `signSlideImagePath(path)` to produce a short-lived (1-hour) signed URL; this URL is **not** persisted in the slide JSONB. The render-time signing pattern eliminates the URL expiry concern that would otherwise accrue from persisting signed URLs.
 
 #### UnlockDefinition (inside `courses.unlock_definition` and `modules.unlock_definition`)
 
