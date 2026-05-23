@@ -130,7 +130,7 @@ export function SequenceDetailClient({
 
         {courses.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
-            No courses in this sequence yet. Create a course and assign it here.
+            No courses in this learning path yet. Create a course and assign it here.
           </div>
         ) : (
           <div className="rounded-lg border border-slate-200 divide-y divide-slate-100">

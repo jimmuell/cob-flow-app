@@ -7,7 +7,7 @@ export default function NewSequencePage() {
       <Link href="/admin/content?tab=sequences" className="inline-block text-xs text-slate-500 hover:text-slate-700">
         ← Content
       </Link>
-      <h1 className="text-xl font-semibold text-slate-800">New Sequence</h1>
+      <h1 className="text-xl font-semibold text-slate-800">New Learning Path</h1>
       <SequenceForm />
     </div>
   );

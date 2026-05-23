@@ -160,7 +160,7 @@ const courseCols: ColumnDef<CourseRow>[] = [
   },
   { accessorKey: 'audience',   header: 'Audience',  cell: ({ getValue }) => <span className="capitalize">{String(getValue())}</span> },
   { accessorKey: 'status',     header: 'Status',    cell: ({ getValue }) => <StatusBadge status={String(getValue())} /> },
-  { accessorKey: 'sequenceName', header: 'Sequence', cell: ({ getValue }) => <span className="text-slate-500">{String(getValue() ?? '—')}</span> },
+  { accessorKey: 'sequenceName', header: 'Learning Path', cell: ({ getValue }) => <span className="text-slate-500">{String(getValue() ?? '—')}</span> },
   { accessorKey: 'estimatedHours', header: 'Hours',  cell: ({ getValue }) => <span>{getValue() != null ? `${getValue()}h` : '—'}</span> },
   { accessorKey: 'updatedAt',  header: 'Updated',   cell: ({ getValue }) => fmt(getValue() as Date) },
   {
@@ -207,7 +207,7 @@ export function CatalogClient({ sequences, courses, quizzes, defaultTab }: Catal
         {newHref && (
           <Button asChild size="sm">
             <Link href={newHref}>
-              {activeTab === 'sequences' ? '+ New Sequence' : '+ New Course'}
+              {activeTab === 'sequences' ? '+ New Learning Path' : '+ New Course'}
             </Link>
           </Button>
         )}
@@ -215,14 +215,14 @@ export function CatalogClient({ sequences, courses, quizzes, defaultTab }: Catal
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="sequences">Sequences <span className="ml-1.5 text-xs opacity-60">({sequences.length})</span></TabsTrigger>
+          <TabsTrigger value="sequences">Learning Paths <span className="ml-1.5 text-xs opacity-60">({sequences.length})</span></TabsTrigger>
           <TabsTrigger value="courses">Courses <span className="ml-1.5 text-xs opacity-60">({courses.length})</span></TabsTrigger>
           <TabsTrigger value="quizzes">Quizzes <span className="ml-1.5 text-xs opacity-60">({quizzes.length})</span></TabsTrigger>
         </TabsList>
 
         <TabsContent value="sequences" className="mt-4">
           {sequences.length === 0
-            ? <EmptyState label="sequences" href="/admin/content/sequences/new" />
+            ? <EmptyState label="learning paths" href="/admin/content/sequences/new" />
             : <DataTable data={sequences} columns={sequenceCols} />}
         </TabsContent>
 

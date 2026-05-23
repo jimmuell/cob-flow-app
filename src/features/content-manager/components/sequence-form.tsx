@@ -93,7 +93,7 @@ export function SequenceForm({ sequenceId, defaultValues }: SequenceFormProps) {
         <Textarea
           id="description"
           {...register('description')}
-          placeholder="Optional summary of what this sequence covers."
+          placeholder="Optional summary of what this learning path covers."
           rows={3}
         />
       </div>
@@ -112,7 +112,7 @@ export function SequenceForm({ sequenceId, defaultValues }: SequenceFormProps) {
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Sequence'}
+          {isSubmitting ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Learning Path'}
         </Button>
         <Button
           type="button"
