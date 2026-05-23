@@ -40,6 +40,7 @@ const mockTx = {
   returning: vi.fn().mockResolvedValue([{ id: 'lesson-001', title: 'Intro Lesson' }]),
   update:    vi.fn().mockReturnThis(),
   set:       vi.fn().mockReturnThis(),
+  delete:    vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
 };
 
 vi.mock('@/lib/db/client', () => ({
@@ -50,7 +51,7 @@ vi.mock('@/lib/db/client', () => ({
 
 import { auditLog } from '@/lib/audit/log';
 
-const { moveLesson } = await import('@/features/content-manager/actions/lesson');
+const { moveLesson, deleteLesson } = await import('@/features/content-manager/actions/lesson');
 
 describe('moveLesson', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -105,5 +106,62 @@ describe('moveLesson', () => {
 
     expect(result.ok).toBe(true);
     expect(mockTx.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('deleteLesson', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('rejects non-admin user', async () => {
+    const { getCurrentUser } = await import('@/lib/auth/session');
+    vi.mocked(getCurrentUser).mockResolvedValueOnce({ ...mockUser, roles: ['ANALYST'] });
+
+    const result = await deleteLesson('lesson-001');
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/admin/i);
+  });
+
+  it('rejects when lesson completions exist', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'lesson-001', title: 'Intro Lesson', moduleId: 'mod-001' }]
+              : [{ n: '3' }], // 3 lesson completions
+          ),
+        }),
+      };
+    });
+
+    const result = await deleteLesson('lesson-001');
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/3 learner record/);
+  });
+
+  it('allows admin to delete lesson with no completions', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'lesson-001', title: 'Intro Lesson', moduleId: 'mod-001' }]
+              : [{ n: '0' }], // no completions
+          ),
+        }),
+      };
+    });
+
+    const result = await deleteLesson('lesson-001');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.delete).toHaveBeenCalledTimes(1);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'lesson_deleted', target: 'lesson-001' }),
+    );
   });
 });

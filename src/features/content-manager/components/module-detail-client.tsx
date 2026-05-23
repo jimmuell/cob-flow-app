@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
-import { publishModule, archiveModule } from '../actions/module';
+import { DeleteDialog } from './delete-dialog';
+import { publishModule, archiveModule, deleteModule } from '../actions/module';
 import { moveLesson, createLesson } from '../actions/lesson';
 import { createModuleQuiz } from '../actions/quiz';
 
@@ -35,6 +36,7 @@ interface ModuleDetailClientProps {
   updatedAt: string;
   lessons: LessonRow[];
   quizzes: QuizRow[];
+  isAdmin?: boolean;
 }
 
 export function ModuleDetailClient({
@@ -49,9 +51,11 @@ export function ModuleDetailClient({
   updatedAt,
   lessons,
   quizzes,
+  isAdmin = false,
 }: ModuleDetailClientProps) {
   const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isReordering, startReorder] = useTransition();
@@ -151,6 +155,11 @@ export function ModuleDetailClient({
           {(status === 'draft' || status === 'published') && (
             <Button size="sm" variant="destructive" onClick={() => setArchiveOpen(true)}>
               Archive
+            </Button>
+          )}
+          {status === 'archived' && isAdmin && (
+            <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}>
+              Delete permanently
             </Button>
           )}
         </div>
@@ -256,6 +265,15 @@ export function ModuleDetailClient({
         open={archiveOpen}
         onOpenChange={setArchiveOpen}
         onConfirm={(justification) => archiveModule(id, justification)}
+        redirectTo={`/admin/content/courses/${courseId}`}
+      />
+
+      <DeleteDialog
+        entityType="Module"
+        entityName={title}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={() => deleteModule(id)}
         redirectTo={`/admin/content/courses/${courseId}`}
       />
     </div>

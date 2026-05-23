@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, max, gte, sql, and, ne } from 'drizzle-orm';
+import { eq, max, gte, sql, and, ne, count } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
-import { modules, quizzes } from '@/lib/db/schema/content';
+import { modules, lessons, quizzes } from '@/lib/db/schema/content';
+import { lessonCompletions, quizAttempts } from '@/lib/db/schema/learner';
+import { isAdmin } from '@/lib/authority/roles';
 import { platformAuthorityCeilings } from '@/lib/db/schema/authority';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
@@ -324,5 +326,54 @@ export async function archiveModule(
     return { ok: true, data: undefined };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to archive module' };
+  }
+}
+
+export async function deleteModule(id: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+  if (!isAdmin(user)) return { ok: false, error: 'Only Admins can permanently delete content' };
+
+  try {
+    return await withCurrentSession(async (tx) => {
+      const [mod] = await tx
+        .select({ id: modules.id, title: modules.title, status: modules.status, courseId: modules.course_id })
+        .from(modules)
+        .where(eq(modules.id, id));
+
+      if (!mod) return { ok: false as const, error: 'Module not found' };
+      if (mod.status !== 'archived') {
+        return { ok: false as const, error: 'Content must be archived before it can be permanently deleted' };
+      }
+
+      let learnerCount = 0;
+      const modLessons = await tx.select({ id: lessons.id }).from(lessons).where(eq(lessons.module_id, id));
+      for (const lesson of modLessons) {
+        const [{ n: lc }] = await tx.select({ n: count() }).from(lessonCompletions).where(eq(lessonCompletions.lesson_id, lesson.id));
+        learnerCount += Number(lc);
+      }
+      const modQuizzes = await tx.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.module_id, id));
+      for (const quiz of modQuizzes) {
+        const [{ n: qa }] = await tx.select({ n: count() }).from(quizAttempts).where(eq(quizAttempts.quiz_id, quiz.id));
+        learnerCount += Number(qa);
+      }
+
+      if (learnerCount > 0) {
+        return { ok: false as const, error: `Cannot delete — ${learnerCount} learner record${learnerCount === 1 ? '' : 's'} exist. Archive preserves data; delete is permanent and only available for content with no learner interaction.` };
+      }
+
+      await auditLog.record({
+        actor: user.id, action: 'module_deleted', target: id,
+        timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+        metadata: { module_id: id, title: mod.title, course_id: mod.courseId },
+      });
+
+      // CASCADE: lessons, quizzes are deleted by Postgres FK on delete cascade
+      await tx.delete(modules).where(eq(modules.id, id));
+      revalidatePath(`/admin/content/modules/${id}`);
+      return { ok: true as const, data: undefined };
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to delete module' };
   }
 }

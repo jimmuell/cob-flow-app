@@ -28,7 +28,12 @@ export type AuthorityAction =
   | "ARCHIVE_MODULE"
   | "CREATE_LESSON"
   | "UPDATE_LESSON"
-  | "CREATE_QUIZ";
+  | "CREATE_QUIZ"
+  | "DELETE_SEQUENCE"
+  | "DELETE_COURSE"
+  | "DELETE_MODULE"
+  | "DELETE_LESSON"
+  | "DELETE_QUIZ";
 
 export type ApprovalQueueType =
   | "LIEN_REDUCTION"

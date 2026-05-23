@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { eq, asc } from 'drizzle-orm';
 import { withCurrentSession } from '@/lib/db/client';
 import { modules, lessons, quizzes, courses } from '@/lib/db/schema/content';
+import { getCurrentUser } from '@/lib/auth/session';
+import { isAdmin } from '@/lib/authority/roles';
 import { ModuleDetailClient } from '@/features/content-manager/components/module-detail-client';
 
 export default async function ModuleDetailPage({
@@ -11,23 +13,26 @@ export default async function ModuleDetailPage({
 }) {
   const { moduleId } = await params;
 
-  // Phase 1: load the module record (lessonRows/quizRows/courseRow all depend on it)
-  const mod = await withCurrentSession((tx) =>
-    tx
-      .select({
-        id:          modules.id,
-        title:       modules.title,
-        slug:        modules.slug,
-        description: modules.description,
-        status:      modules.status,
-        courseId:    modules.course_id,
-        createdAt:   modules.created_at,
-        updatedAt:   modules.updated_at,
-      })
-      .from(modules)
-      .where(eq(modules.id, moduleId))
-      .then((rows) => rows[0] ?? null),
-  );
+  // Phase 1: load the module record and current user in parallel
+  const [mod, user] = await Promise.all([
+    withCurrentSession((tx) =>
+      tx
+        .select({
+          id:          modules.id,
+          title:       modules.title,
+          slug:        modules.slug,
+          description: modules.description,
+          status:      modules.status,
+          courseId:    modules.course_id,
+          createdAt:   modules.created_at,
+          updatedAt:   modules.updated_at,
+        })
+        .from(modules)
+        .where(eq(modules.id, moduleId))
+        .then((rows) => rows[0] ?? null),
+    ),
+    getCurrentUser(),
+  ]);
 
   if (!mod) notFound();
 
@@ -79,6 +84,7 @@ export default async function ModuleDetailPage({
       updatedAt={mod.updatedAt.toISOString()}
       lessons={lessonRows}
       quizzes={quizRows}
+      isAdmin={user ? isAdmin(user) : false}
     />
   );
 }

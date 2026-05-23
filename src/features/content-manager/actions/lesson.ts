@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, max, and } from 'drizzle-orm';
+import { eq, max, and, count } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { lessons } from '@/lib/db/schema/content';
+import { lessonCompletions } from '@/lib/db/schema/learner';
+import { isAdmin } from '@/lib/authority/roles';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
 import { lessonCreateSchema } from '../schemas/lesson';
@@ -146,5 +148,41 @@ export async function moveLesson(
       : '';
     console.error('moveLesson failure:', base, e);
     return { ok: false, error: `${base}${detail}` };
+  }
+}
+
+export async function deleteLesson(id: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+  if (!isAdmin(user)) return { ok: false, error: 'Only Admins can permanently delete content' };
+
+  try {
+    return await withCurrentSession(async (tx) => {
+      const [lesson] = await tx
+        .select({ id: lessons.id, title: lessons.title, moduleId: lessons.module_id })
+        .from(lessons)
+        .where(eq(lessons.id, id));
+
+      if (!lesson) return { ok: false as const, error: 'Lesson not found' };
+
+      const [{ n: lc }] = await tx.select({ n: count() }).from(lessonCompletions).where(eq(lessonCompletions.lesson_id, id));
+      const learnerCount = Number(lc);
+
+      if (learnerCount > 0) {
+        return { ok: false as const, error: `Cannot delete — ${learnerCount} learner record${learnerCount === 1 ? '' : 's'} exist. Archive preserves data; delete is permanent and only available for content with no learner interaction.` };
+      }
+
+      await auditLog.record({
+        actor: user.id, action: 'lesson_deleted', target: id,
+        timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+        metadata: { lesson_id: id, title: lesson.title, module_id: lesson.moduleId },
+      });
+
+      await tx.delete(lessons).where(eq(lessons.id, id));
+      revalidatePath(`/admin/content/modules/${lesson.moduleId}`);
+      return { ok: true as const, data: undefined };
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to delete lesson' };
   }
 }

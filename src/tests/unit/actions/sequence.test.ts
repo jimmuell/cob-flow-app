@@ -38,6 +38,10 @@ const mockTx = {
   update:  vi.fn().mockReturnThis(),
   set:     vi.fn().mockReturnThis(),
   where:   vi.fn().mockReturnThis(),
+  select:  vi.fn().mockReturnValue({
+    from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
+  }),
+  delete:  vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
 };
 
 vi.mock('@/lib/db/client', () => ({
@@ -56,6 +60,7 @@ const {
   createSequence,
   updateSequence,
   archiveSequence,
+  deleteSequence,
 } = await import('@/features/content-manager/actions/sequence');
 
 describe('createSequence', () => {
@@ -175,5 +180,54 @@ describe('canPerform enforcement', () => {
     });
     expect(result.ok).toBe(false);
     expect((result as { ok: false; error: string }).error).toBe('Not authenticated');
+  });
+});
+
+describe('deleteSequence', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('rejects non-admin user', async () => {
+    const { getCurrentUser } = await import('@/lib/auth/session');
+    vi.mocked(getCurrentUser).mockResolvedValueOnce({ ...mockUser, roles: ['ANALYST'] });
+
+    const result = await deleteSequence('seq-001');
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/admin/i);
+  });
+
+  it('rejects content that is not archived', async () => {
+    mockTx.select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ id: 'seq-001', name: 'Test Seq', status: 'draft' }]),
+      }),
+    });
+
+    const result = await deleteSequence('seq-001');
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/archived/i);
+  });
+
+  it('allows admin to delete archived learning path with no courses', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'seq-001', name: 'Test Seq', status: 'archived' }]
+              : [], // no courses in the learning path
+          ),
+        }),
+      };
+    });
+
+    const result = await deleteSequence('seq-001');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.delete).toHaveBeenCalledTimes(1);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'sequence_deleted', target: 'seq-001' }),
+    );
   });
 });

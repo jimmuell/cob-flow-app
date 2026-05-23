@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
-import { publishSequence, archiveSequence } from '../actions/sequence';
+import { DeleteDialog } from './delete-dialog';
+import { publishSequence, archiveSequence, deleteSequence } from '../actions/sequence';
 import { moveCourse } from '../actions/course';
 
 interface CourseRow {
@@ -26,6 +27,7 @@ interface SequenceDetailClientProps {
   createdAt: string;
   updatedAt: string;
   courses: CourseRow[];
+  isAdmin?: boolean;
 }
 
 export function SequenceDetailClient({
@@ -38,9 +40,11 @@ export function SequenceDetailClient({
   createdAt,
   updatedAt,
   courses,
+  isAdmin = false,
 }: SequenceDetailClientProps) {
   const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isReordering, startReorder] = useTransition();
@@ -107,6 +111,11 @@ export function SequenceDetailClient({
               Archive
             </Button>
           )}
+          {status === 'archived' && isAdmin && (
+            <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}>
+              Delete permanently
+            </Button>
+          )}
         </div>
       </div>
 
@@ -169,6 +178,15 @@ export function SequenceDetailClient({
         open={archiveOpen}
         onOpenChange={setArchiveOpen}
         onConfirm={(justification) => archiveSequence(id, justification)}
+        redirectTo="/admin/content"
+      />
+
+      <DeleteDialog
+        entityType="Learning Path"
+        entityName={name}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={() => deleteSequence(id)}
         redirectTo="/admin/content"
       />
     </div>

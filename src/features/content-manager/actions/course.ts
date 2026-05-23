@@ -1,10 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, sql, and, ne } from 'drizzle-orm';
+import { eq, sql, and, ne, count } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
-import { courses, modules, quizzes } from '@/lib/db/schema/content';
+import { courses, modules, lessons, quizzes } from '@/lib/db/schema/content';
+import { courseEnrollments, courseCompletions, lessonCompletions, quizAttempts } from '@/lib/db/schema/learner';
+import { authorityUnlocks } from '@/lib/db/schema/authority';
+import { isAdmin } from '@/lib/authority/roles';
 import { platformAuthorityCeilings } from '@/lib/db/schema/authority';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
@@ -370,5 +373,67 @@ export async function archiveCourse(
     return { ok: true, data: undefined };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to archive course' };
+  }
+}
+
+export async function deleteCourse(id: string): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+  if (!isAdmin(user)) return { ok: false, error: 'Only Admins can permanently delete content' };
+
+  try {
+    return await withCurrentSession(async (tx) => {
+      const [course] = await tx
+        .select({ id: courses.id, title: courses.title, status: courses.status })
+        .from(courses)
+        .where(eq(courses.id, id));
+
+      if (!course) return { ok: false as const, error: 'Course not found' };
+      if (course.status !== 'archived') {
+        return { ok: false as const, error: 'Content must be archived before it can be permanently deleted' };
+      }
+
+      let learnerCount = 0;
+      const [{ n: enroll }]   = await tx.select({ n: count() }).from(courseEnrollments).where(eq(courseEnrollments.course_id, id));
+      const [{ n: complete }] = await tx.select({ n: count() }).from(courseCompletions).where(eq(courseCompletions.course_id, id));
+      const [{ n: unlock }]   = await tx.select({ n: count() }).from(authorityUnlocks).where(eq(authorityUnlocks.course_id, id));
+      learnerCount += Number(enroll) + Number(complete) + Number(unlock);
+
+      const courseModules = await tx.select({ id: modules.id }).from(modules).where(eq(modules.course_id, id));
+      for (const mod of courseModules) {
+        const modLessons = await tx.select({ id: lessons.id }).from(lessons).where(eq(lessons.module_id, mod.id));
+        for (const lesson of modLessons) {
+          const [{ n: lc }] = await tx.select({ n: count() }).from(lessonCompletions).where(eq(lessonCompletions.lesson_id, lesson.id));
+          learnerCount += Number(lc);
+        }
+        const modQuizzes = await tx.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.module_id, mod.id));
+        for (const quiz of modQuizzes) {
+          const [{ n: qa }] = await tx.select({ n: count() }).from(quizAttempts).where(eq(quizAttempts.quiz_id, quiz.id));
+          learnerCount += Number(qa);
+        }
+      }
+      const courseQuizzes = await tx.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.course_id, id));
+      for (const quiz of courseQuizzes) {
+        const [{ n: qa }] = await tx.select({ n: count() }).from(quizAttempts).where(eq(quizAttempts.quiz_id, quiz.id));
+        learnerCount += Number(qa);
+      }
+
+      if (learnerCount > 0) {
+        return { ok: false as const, error: `Cannot delete — ${learnerCount} learner record${learnerCount === 1 ? '' : 's'} exist. Archive preserves data; delete is permanent and only available for content with no learner interaction.` };
+      }
+
+      await auditLog.record({
+        actor: user.id, action: 'course_deleted', target: id,
+        timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+        metadata: { course_id: id, title: course.title },
+      });
+
+      // CASCADE: modules → lessons, quizzes are deleted by Postgres FK on delete cascade
+      await tx.delete(courses).where(eq(courses.id, id));
+      revalidatePath('/admin/content');
+      return { ok: true as const, data: undefined };
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to delete course' };
   }
 }

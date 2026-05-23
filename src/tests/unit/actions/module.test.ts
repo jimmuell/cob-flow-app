@@ -57,6 +57,7 @@ const mockTx = {
   set:       mockSet,
   where:     mockWhere,
   execute:   vi.fn().mockResolvedValue(undefined),
+  delete:    vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
 };
 
 // select().from() for max-order query returns [{ maxOrder: 2 }]
@@ -73,7 +74,7 @@ vi.mock('@/lib/db/client', () => ({
 
 import { auditLog } from '@/lib/audit/log';
 
-const { createModule, archiveModule, moveModule } = await import('@/features/content-manager/actions/module');
+const { createModule, archiveModule, moveModule, deleteModule } = await import('@/features/content-manager/actions/module');
 
 describe('createModule validation', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -218,6 +219,55 @@ describe('archiveModule', () => {
     expect(auditLog.record).toHaveBeenCalledTimes(2);
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'quiz_archived', target: 'quiz-001' }),
+    );
+  });
+});
+
+describe('deleteModule', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('rejects non-admin user', async () => {
+    const { getCurrentUser } = await import('@/lib/auth/session');
+    vi.mocked(getCurrentUser).mockResolvedValueOnce({ ...mockUser, roles: ['ANALYST'] });
+
+    const result = await deleteModule('mod-001');
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/admin/i);
+  });
+
+  it('rejects content that is not archived', async () => {
+    mockTx.select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{ id: 'mod-001', title: 'Test Module', status: 'draft', courseId: 'course-001' }]),
+      }),
+    });
+
+    const result = await deleteModule('mod-001');
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/archived/i);
+  });
+
+  it('allows admin to delete archived module with no learner data', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'mod-001', title: 'Test Module', status: 'archived', courseId: 'course-001' }]
+              : [], // no lessons, no quizzes
+          ),
+        }),
+      };
+    });
+
+    const result = await deleteModule('mod-001');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.delete).toHaveBeenCalledTimes(1);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'module_deleted', target: 'mod-001' }),
     );
   });
 });

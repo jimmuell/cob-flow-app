@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { eq, asc } from 'drizzle-orm';
 import { withCurrentSession } from '@/lib/db/client';
 import { courses, modules, courseSequences } from '@/lib/db/schema/content';
+import { getCurrentUser } from '@/lib/auth/session';
+import { isAdmin } from '@/lib/authority/roles';
 import { CourseDetailClient } from '@/features/content-manager/components/course-detail-client';
 
 export default async function CourseDetailPage({
@@ -11,26 +13,29 @@ export default async function CourseDetailPage({
 }) {
   const { courseId } = await params;
 
-  // Phase 1: load the course record (moduleRows/seqRow both depend on it)
-  const course = await withCurrentSession((tx) =>
-    tx
-      .select({
-        id:               courses.id,
-        title:            courses.title,
-        slug:             courses.slug,
-        description:      courses.description,
-        audience:         courses.audience,
-        status:           courses.status,
-        estimatedHours:   courses.estimated_hours,
-        unlockDefinition: courses.unlock_definition,
-        sequenceId:       courses.sequence_id,
-        createdAt:        courses.created_at,
-        updatedAt:        courses.updated_at,
-      })
-      .from(courses)
-      .where(eq(courses.id, courseId))
-      .then((rows) => rows[0] ?? null),
-  );
+  // Phase 1: load the course record and current user in parallel
+  const [course, user] = await Promise.all([
+    withCurrentSession((tx) =>
+      tx
+        .select({
+          id:               courses.id,
+          title:            courses.title,
+          slug:             courses.slug,
+          description:      courses.description,
+          audience:         courses.audience,
+          status:           courses.status,
+          estimatedHours:   courses.estimated_hours,
+          unlockDefinition: courses.unlock_definition,
+          sequenceId:       courses.sequence_id,
+          createdAt:        courses.created_at,
+          updatedAt:        courses.updated_at,
+        })
+        .from(courses)
+        .where(eq(courses.id, courseId))
+        .then((rows) => rows[0] ?? null),
+    ),
+    getCurrentUser(),
+  ]);
 
   if (!course) notFound();
 
@@ -82,6 +87,7 @@ export default async function CourseDetailPage({
         status:      m.status,
         moduleOrder: m.moduleOrder,
       }))}
+      isAdmin={user ? isAdmin(user) : false}
     />
   );
 }

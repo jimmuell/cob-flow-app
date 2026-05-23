@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
-import { publishCourse, archiveCourse } from '../actions/course';
+import { DeleteDialog } from './delete-dialog';
+import { publishCourse, archiveCourse, deleteCourse } from '../actions/course';
 import { moveModule } from '../actions/module';
 
 interface ModuleRow {
@@ -35,6 +36,7 @@ interface CourseDetailClientProps {
   createdAt: string;
   updatedAt: string;
   modules: ModuleRow[];
+  isAdmin?: boolean;
 }
 
 const UNLOCK_LABELS: Record<string, string> = {
@@ -60,9 +62,11 @@ export function CourseDetailClient({
   createdAt,
   updatedAt,
   modules,
+  isAdmin = false,
 }: CourseDetailClientProps) {
   const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isReordering, startReorder] = useTransition();
@@ -134,6 +138,11 @@ export function CourseDetailClient({
           {(status === 'draft' || status === 'published') && (
             <Button size="sm" variant="destructive" onClick={() => setArchiveOpen(true)}>
               Archive
+            </Button>
+          )}
+          {status === 'archived' && isAdmin && (
+            <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}>
+              Delete permanently
             </Button>
           )}
         </div>
@@ -215,6 +224,15 @@ export function CourseDetailClient({
         open={archiveOpen}
         onOpenChange={setArchiveOpen}
         onConfirm={(justification) => archiveCourse(id, justification)}
+        redirectTo="/admin/content"
+      />
+
+      <DeleteDialog
+        entityType="Course"
+        entityName={title}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={() => deleteCourse(id)}
         redirectTo="/admin/content"
       />
     </div>
