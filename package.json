@@ -12,7 +12,9 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed:cm": "tsx scripts/seed-content-manager-demo.ts",
+    "db:seed:cm:reset": "tsx scripts/seed-content-manager-demo.ts --reset"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
