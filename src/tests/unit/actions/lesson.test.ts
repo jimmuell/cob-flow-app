@@ -51,7 +51,7 @@ vi.mock('@/lib/db/client', () => ({
 
 import { auditLog } from '@/lib/audit/log';
 
-const { moveLesson, deleteLesson } = await import('@/features/content-manager/actions/lesson');
+const { moveLesson, deleteLesson, updateLessonSlides } = await import('@/features/content-manager/actions/lesson');
 
 describe('moveLesson', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -162,6 +162,49 @@ describe('deleteLesson', () => {
     expect(mockTx.delete).toHaveBeenCalledTimes(1);
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'lesson_deleted', target: 'lesson-001' }),
+    );
+  });
+});
+
+describe('updateLessonSlides', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('rejects unauthenticated user', async () => {
+    const { getCurrentUser } = await import('@/lib/auth/session');
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(null);
+
+    const result = await updateLessonSlides('lesson-001', []);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/authenticated/i);
+  });
+
+  it('rejects slides that fail Zod validation', async () => {
+    const result = await updateLessonSlides('lesson-001', [
+      { order: 1, type: 'video', url: 'https://example.com' } as unknown as Record<string, unknown>,
+    ]);
+    expect(result.ok).toBe(false);
+  });
+
+  it('persists valid slides and writes audit event', async () => {
+    const slides = [
+      { order: 1, type: 'text', heading: 'Intro', body_markdown: 'Welcome' },
+      { order: 2, type: 'image', image_url: 'https://example.com/img.png', caption: 'Figure 1' },
+    ];
+
+    const result = await updateLessonSlides('lesson-001', slides);
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.update).toHaveBeenCalledTimes(1);
+    expect(mockTx.set).toHaveBeenCalledWith(
+      expect.objectContaining({ slides: expect.any(Array) }),
+    );
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action:   'lesson_updated',
+        target:   'lesson-001',
+        category: 'CONFIG',
+        metadata: { lesson_id: 'lesson-001', slide_count: 2 },
+      }),
     );
   });
 });

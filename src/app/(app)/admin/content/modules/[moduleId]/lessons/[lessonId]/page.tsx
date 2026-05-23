@@ -2,13 +2,16 @@ import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { withCurrentSession } from '@/lib/db/client';
-import { lessons, modules } from '@/lib/db/schema/content';
+import { lessons, modules, courses } from '@/lib/db/schema/content';
 import { getCurrentUser } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/authority/roles';
 import { AdminDeleteSection } from '@/features/content-manager/components/admin-delete-section';
 import { deleteLesson } from '@/features/content-manager/actions/lesson';
+import { SlideEditor } from '@/features/content-manager/components/slide-editor';
+import { slidesArraySchema } from '@/features/content-manager/schemas/slide';
+import type { Slide } from '@/features/content-manager/schemas/slide';
 
-export default async function LessonPlaceholderPage({
+export default async function LessonSlideEditorPage({
   params,
 }: {
   params: Promise<{ moduleId: string; lessonId: string }>;
@@ -22,7 +25,8 @@ export default async function LessonPlaceholderPage({
           id:         lessons.id,
           title:      lessons.title,
           lessonType: lessons.lesson_type,
-          slug:       lessons.slug,
+          slides:     lessons.slides,
+          moduleId:   lessons.module_id,
         })
         .from(lessons)
         .where(eq(lessons.id, lessonId));
@@ -30,50 +34,62 @@ export default async function LessonPlaceholderPage({
       if (!lesson) return null;
 
       const [mod] = await tx
-        .select({ id: modules.id, title: modules.title })
+        .select({ id: modules.id, title: modules.title, courseId: modules.course_id })
         .from(modules)
-        .where(eq(modules.id, moduleId));
+        .where(eq(modules.id, lesson.moduleId));
 
-      return { lesson, mod: mod ?? null };
+      if (!mod) return null;
+
+      const [course] = await tx
+        .select({ id: courses.id, title: courses.title })
+        .from(courses)
+        .where(eq(courses.id, mod.courseId));
+
+      return { lesson, mod, course: course ?? null };
     }),
     getCurrentUser(),
   ]);
 
   if (!data) notFound();
 
-  const { lesson, mod } = data;
+  const { lesson, mod, course } = data;
   const userIsAdmin = user ? isAdmin(user) : false;
 
+  const parsed = slidesArraySchema.safeParse(lesson.slides);
+  const initialSlides: Slide[] = parsed.success ? parsed.data : [];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Breadcrumb */}
       <p className="text-xs text-slate-500">
         <Link href="/admin/content" className="hover:underline">Content</Link>
-        {mod && (
+        {course && (
           <>
             {' › '}
-            <Link href={`/admin/content/modules/${moduleId}`} className="hover:underline">{mod.title}</Link>
+            <Link href={`/admin/content/courses/${course.id}`} className="hover:underline">{course.title}</Link>
           </>
         )}
+        {' › '}
+        <Link href={`/admin/content/modules/${moduleId}`} className="hover:underline">{mod.title}</Link>
         {' › '}
         {lesson.title}
       </p>
 
-      <Link href={`/admin/content/modules/${moduleId}`} className="inline-block text-xs text-slate-500 hover:text-slate-700">
-        ← {mod?.title ?? 'Module'}
-      </Link>
-
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold text-slate-800">{lesson.title}</h1>
-        <p className="text-xs text-slate-500">
-          type: <span className="capitalize">{lesson.lessonType.replace('-', ' ')}</span>
-          {' · '}slug: <span className="font-mono">{lesson.slug}</span>
-        </p>
+      {/* Lesson meta */}
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-lg font-semibold text-slate-800">{lesson.title}</h1>
+        <span className="text-xs text-slate-400 capitalize">{lesson.lessonType.replace('-', ' ')}</span>
       </div>
 
-      <div className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
-        Lesson editor coming in CP5. Slide content for this lesson will be authored here.
-      </div>
+      {/* Slide editor (desktop-only guard is inside the component) */}
+      <SlideEditor
+        lessonId={lesson.id}
+        lessonTitle={lesson.title}
+        moduleId={moduleId}
+        initialSlides={initialSlides}
+      />
 
+      {/* Admin delete — only for archived lessons */}
       {userIsAdmin && (
         <AdminDeleteSection
           entityType="Lesson"

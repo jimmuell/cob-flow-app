@@ -4,13 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { eq, max, and, count } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
-import { lessons } from '@/lib/db/schema/content';
+import { lessons, modules, courses } from '@/lib/db/schema/content';
 import { lessonCompletions } from '@/lib/db/schema/learner';
 import { isAdmin } from '@/lib/authority/roles';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
 import { lessonCreateSchema } from '../schemas/lesson';
 import type { LessonCreateInput } from '../schemas/lesson';
+import { slidesArraySchema } from '../schemas/slide';
+import type { Slide } from '../schemas/slide';
 
 type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -150,6 +152,203 @@ export async function moveLesson(
     return { ok: false, error: `${base}${detail}` };
   }
 }
+
+// ─── Slide helpers ────────────────────────────────────────────────────────────
+
+async function resolveUploadPath(
+  tx: Parameters<Parameters<typeof withCurrentSession>[0]>[0],
+  lessonId: string,
+): Promise<{ contentType: string; courseSlug: string; moduleSlug: string; lessonSlug: string } | null> {
+  const [lesson] = await tx
+    .select({ slug: lessons.slug, moduleId: lessons.module_id })
+    .from(lessons)
+    .where(eq(lessons.id, lessonId));
+  if (!lesson) return null;
+
+  const [mod] = await tx
+    .select({ slug: modules.slug, courseId: modules.course_id })
+    .from(modules)
+    .where(eq(modules.id, lesson.moduleId));
+  if (!mod) return null;
+
+  const [course] = await tx
+    .select({ slug: courses.slug, contentType: courses.content_type })
+    .from(courses)
+    .where(eq(courses.id, mod.courseId));
+  if (!course) return null;
+
+  return {
+    contentType: course.contentType,
+    courseSlug:  course.slug,
+    moduleSlug:  mod.slug,
+    lessonSlug:  lesson.slug,
+  };
+}
+
+// ─── updateLessonSlides ───────────────────────────────────────────────────────
+
+export async function updateLessonSlides(
+  lessonId: string,
+  rawSlides: unknown[],
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  const perm = canPerform({ user, action: 'UPDATE_LESSON' });
+  if (perm.decision === 'deny') return { ok: false, error: perm.reason };
+
+  const validated = slidesArraySchema.safeParse(rawSlides);
+  if (!validated.success) {
+    return { ok: false, error: validated.error.issues[0]?.message ?? 'Invalid slide data' };
+  }
+
+  try {
+    await withCurrentSession(async (tx) => {
+      await tx
+        .update(lessons)
+        .set({ slides: validated.data, updated_at: new Date() })
+        .where(eq(lessons.id, lessonId));
+
+      await auditLog.record({
+        actor:     user.id,
+        action:    'lesson_updated',
+        target:    lessonId,
+        timestamp: new Date().toISOString(),
+        category:  'CONFIG',
+        tenantId:  user.tenantId,
+        metadata:  { lesson_id: lessonId, slide_count: validated.data.length },
+      });
+    });
+
+    revalidatePath(`/admin/content/modules`);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to save slides' };
+  }
+}
+
+// ─── uploadSlideImage ─────────────────────────────────────────────────────────
+
+export async function uploadSlideImage(
+  lessonId: string,
+  formData: FormData,
+): Promise<ActionResult<{ imageUrl: string }>> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  const perm = canPerform({ user, action: 'UPDATE_LESSON' });
+  if (perm.decision === 'deny') return { ok: false, error: perm.reason };
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { ok: false, error: 'No file provided' };
+
+  try {
+    const pathInfo = await withCurrentSession((tx) => resolveUploadPath(tx, lessonId));
+    if (!pathInfo) return { ok: false, error: 'Lesson not found' };
+
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'png';
+    const storagePath = `${pathInfo.contentType}/${pathInfo.courseSlug}/${pathInfo.moduleSlug}/${pathInfo.lessonSlug}/${crypto.randomUUID()}.${ext}`;
+
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const { createServiceClient } = await import('@/lib/supabase/server');
+    const supabase = createServiceClient();
+
+    const { error: uploadError } = await supabase.storage
+      .from('content-assets')
+      .upload(storagePath, bytes, { contentType: file.type, upsert: false });
+
+    if (uploadError) return { ok: false, error: uploadError.message };
+
+    const { data: signed } = await supabase.storage
+      .from('content-assets')
+      .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
+
+    if (!signed?.signedUrl) return { ok: false, error: 'Failed to generate image URL' };
+
+    return { ok: true, data: { imageUrl: signed.signedUrl } };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Upload failed' };
+  }
+}
+
+// ─── importPdfSlides ──────────────────────────────────────────────────────────
+
+export async function importPdfSlides(
+  lessonId: string,
+  formData: FormData,
+): Promise<ActionResult<{ slides: Slide[] }>> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  const perm = canPerform({ user, action: 'UPDATE_LESSON' });
+  if (perm.decision === 'deny') return { ok: false, error: perm.reason };
+
+  const file = formData.get('file');
+  if (!(file instanceof File)) return { ok: false, error: 'No file provided' };
+
+  const { writeFileSync, unlinkSync } = await import('fs');
+  const { tmpdir } = await import('os');
+  const { join } = await import('path');
+  const tmpPath = join(tmpdir(), `pdf_import_${Date.now()}_${Math.random().toString(36).slice(2)}.pdf`);
+
+  try {
+    const bytes = Buffer.from(await file.arrayBuffer());
+    writeFileSync(tmpPath, bytes);
+
+    const { pdf } = await import('pdf-to-img');
+    const document = await pdf(tmpPath, { scale: 2 });
+    const pageCount = document.length;
+
+    if (pageCount > 200) {
+      return { ok: false, error: 'PDF_TOO_LARGE' };
+    }
+    if (pageCount > 50) {
+      return { ok: false, error: 'PDF_DEFER_CP10' };
+    }
+
+    const pathInfo = await withCurrentSession((tx) => resolveUploadPath(tx, lessonId));
+    if (!pathInfo) return { ok: false, error: 'Lesson not found' };
+
+    const { createServiceClient } = await import('@/lib/supabase/server');
+    const supabase = createServiceClient();
+    const newSlides: Slide[] = [];
+    let pageNum = 0;
+
+    for await (const pageBuffer of document) {
+      pageNum++;
+      const storagePath = `${pathInfo.contentType}/${pathInfo.courseSlug}/${pathInfo.moduleSlug}/${pathInfo.lessonSlug}/${crypto.randomUUID()}.png`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('content-assets')
+        .upload(storagePath, pageBuffer as Buffer, { contentType: 'image/png', upsert: false });
+
+      let imageUrl = '';
+      if (!uploadError) {
+        const { data: signed } = await supabase.storage
+          .from('content-assets')
+          .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
+        imageUrl = signed?.signedUrl ?? '';
+      }
+
+      newSlides.push({
+        order:       newSlides.length + 1,
+        type:        'imported',
+        image_url:   imageUrl,
+        caption:     `Imported page ${pageNum} of ${file.name}`,
+        source_pdf:  file.name,
+        source_page: pageNum,
+      });
+    }
+
+    return { ok: true, data: { slides: newSlides } };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'PDF import failed' };
+  } finally {
+    try { unlinkSync(tmpPath); } catch { /* already removed */ }
+  }
+}
+
+// ─── deleteLesson ─────────────────────────────────────────────────────────────
 
 export async function deleteLesson(id: string): Promise<ActionResult> {
   const user = await getCurrentUser();
