@@ -227,14 +227,13 @@ export async function moveModule(
 
       if (!neighbor) return;
 
-      await tx.execute(sql`
-        UPDATE modules
-        SET module_order = CASE
-          WHEN id = ${current.id}  THEN ${neighbor.module_order}
-          WHEN id = ${neighbor.id} THEN ${current.module_order}
-        END
-        WHERE id IN (${current.id}, ${neighbor.id})
-      `);
+      // Three-step sentinel swap: -1 is out-of-range for all real module_order
+      // values (always >= 1), so each step satisfies the unique constraint
+      // individually rather than relying on end-of-statement deferral.
+      const SENTINEL = -1;
+      await tx.update(modules).set({ module_order: SENTINEL }).where(eq(modules.id, current.id));
+      await tx.update(modules).set({ module_order: current.module_order }).where(eq(modules.id, neighbor.id));
+      await tx.update(modules).set({ module_order: neighbor.module_order }).where(eq(modules.id, current.id));
 
       await auditLog.record({
         actor:     user.id,
@@ -257,7 +256,13 @@ export async function moveModule(
     if (courseId) revalidatePath(`/admin/content/courses/${courseId}`);
     return { ok: true, data: undefined };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Failed to reorder module' };
+    const base = e instanceof Error ? e.message : 'Failed to reorder module';
+    const errObj = e as { query?: string; params?: unknown };
+    const detail = errObj.query
+      ? ` (Query: ${String(errObj.query).slice(0, 120)} | Params: ${JSON.stringify(errObj.params)})`
+      : '';
+    console.error('moveModule failure:', base, e);
+    return { ok: false, error: `${base}${detail}` };
   }
 }
 

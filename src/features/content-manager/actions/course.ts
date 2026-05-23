@@ -250,14 +250,14 @@ export async function moveCourse(
 
       if (!neighbor) return;
 
-      await tx.execute(sql`
-        UPDATE courses
-        SET sequence_order = CASE
-          WHEN id = ${current.id}  THEN ${neighbor.sequence_order}
-          WHEN id = ${neighbor.id} THEN ${current.sequence_order}
-        END
-        WHERE id IN (${current.id}, ${neighbor.id})
-      `);
+      // Three-step sentinel swap: -1 is out-of-range for all real sequence_order
+      // values (always >= 1). Setting sequence_order = -1 (NOT NULL) is valid
+      // under the courses_sequence_order_paired CHECK which only requires the
+      // field to be non-null when sequence_id is non-null.
+      const SENTINEL = -1;
+      await tx.update(courses).set({ sequence_order: SENTINEL }).where(eq(courses.id, current.id));
+      await tx.update(courses).set({ sequence_order: current.sequence_order }).where(eq(courses.id, neighbor.id));
+      await tx.update(courses).set({ sequence_order: neighbor.sequence_order }).where(eq(courses.id, current.id));
 
       await auditLog.record({
         actor:     user.id,
@@ -280,7 +280,13 @@ export async function moveCourse(
     if (sequenceId) revalidatePath(`/admin/content/sequences/${sequenceId}`);
     return { ok: true, data: undefined };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Failed to reorder course' };
+    const base = e instanceof Error ? e.message : 'Failed to reorder course';
+    const errObj = e as { query?: string; params?: unknown };
+    const detail = errObj.query
+      ? ` (Query: ${String(errObj.query).slice(0, 120)} | Params: ${JSON.stringify(errObj.params)})`
+      : '';
+    console.error('moveCourse failure:', base, e);
+    return { ok: false, error: `${base}${detail}` };
   }
 }
 

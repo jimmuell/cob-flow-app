@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, max, sql, and } from 'drizzle-orm';
+import { eq, max, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { lessons } from '@/lib/db/schema/content';
@@ -111,14 +111,13 @@ export async function moveLesson(
 
       if (!neighbor) return;
 
-      await tx.execute(sql`
-        UPDATE lessons
-        SET lesson_order = CASE
-          WHEN id = ${current.id}  THEN ${neighbor.lesson_order}
-          WHEN id = ${neighbor.id} THEN ${current.lesson_order}
-        END
-        WHERE id IN (${current.id}, ${neighbor.id})
-      `);
+      // Three-step sentinel swap: -1 is out-of-range for all real lesson_order
+      // values (always >= 1), so each step satisfies the unique constraint
+      // individually rather than relying on end-of-statement deferral.
+      const SENTINEL = -1;
+      await tx.update(lessons).set({ lesson_order: SENTINEL }).where(eq(lessons.id, current.id));
+      await tx.update(lessons).set({ lesson_order: current.lesson_order }).where(eq(lessons.id, neighbor.id));
+      await tx.update(lessons).set({ lesson_order: neighbor.lesson_order }).where(eq(lessons.id, current.id));
 
       await auditLog.record({
         actor:     user.id,
@@ -140,6 +139,12 @@ export async function moveLesson(
     if (moduleId) revalidatePath(`/admin/content/modules/${moduleId}`);
     return { ok: true, data: undefined };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Failed to reorder lesson' };
+    const base = e instanceof Error ? e.message : 'Failed to reorder lesson';
+    const errObj = e as { query?: string; params?: unknown };
+    const detail = errObj.query
+      ? ` (Query: ${String(errObj.query).slice(0, 120)} | Params: ${JSON.stringify(errObj.params)})`
+      : '';
+    console.error('moveLesson failure:', base, e);
+    return { ok: false, error: `${base}${detail}` };
   }
 }

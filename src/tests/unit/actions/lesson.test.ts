@@ -38,7 +38,8 @@ const mockTx = {
   insert:    vi.fn().mockReturnThis(),
   values:    vi.fn().mockReturnThis(),
   returning: vi.fn().mockResolvedValue([{ id: 'lesson-001', title: 'Intro Lesson' }]),
-  execute:   vi.fn().mockResolvedValue(undefined),
+  update:    vi.fn().mockReturnThis(),
+  set:       vi.fn().mockReturnThis(),
 };
 
 vi.mock('@/lib/db/client', () => ({
@@ -54,7 +55,7 @@ const { moveLesson } = await import('@/features/content-manager/actions/lesson')
 describe('moveLesson', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('swaps lesson_order with neighbor and emits audit event', async () => {
+  it('performs three-step sentinel swap and emits audit event', async () => {
     let selectCallCount = 0;
     mockTx.select = vi.fn().mockImplementation(() => {
       const callIndex = selectCallCount++;
@@ -68,12 +69,18 @@ describe('moveLesson', () => {
         }),
       };
     });
-    mockTx.execute = vi.fn().mockResolvedValue(undefined);
 
     const result = await moveLesson('lesson-001', 'up');
 
     expect(result.ok).toBe(true);
-    expect(mockTx.execute).toHaveBeenCalledTimes(1);
+    // Three individual UPDATE statements, not a single CASE-UPDATE
+    expect(mockTx.update).toHaveBeenCalledTimes(3);
+    // Step 1: current moves to sentinel -1
+    expect(mockTx.set.mock.calls[0][0]).toEqual({ lesson_order: -1 });
+    // Step 2: neighbor takes current's old order (2)
+    expect(mockTx.set.mock.calls[1][0]).toEqual({ lesson_order: 2 });
+    // Step 3: current takes neighbor's old order (1)
+    expect(mockTx.set.mock.calls[2][0]).toEqual({ lesson_order: 1 });
     expect(auditLog.record).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'lesson_reordered', target: 'lesson-001' }),
     );
@@ -93,11 +100,10 @@ describe('moveLesson', () => {
         }),
       };
     });
-    mockTx.execute = vi.fn().mockResolvedValue(undefined);
 
     const result = await moveLesson('lesson-001', 'up');
 
     expect(result.ok).toBe(true);
-    expect(mockTx.execute).not.toHaveBeenCalled();
+    expect(mockTx.update).not.toHaveBeenCalled();
   });
 });
