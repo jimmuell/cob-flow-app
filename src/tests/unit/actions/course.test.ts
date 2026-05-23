@@ -197,9 +197,42 @@ describe('archiveCourse', () => {
     expect((result as { ok: false; error: string }).error).toMatch(/10 characters/);
   });
 
-  it('accepts long enough justification', async () => {
+  it('accepts long enough justification (no cascade targets)', async () => {
     mockTx.returning.mockResolvedValueOnce([{ title: 'Test Course' }]);
+    // Cascade: no quizzes, no modules
+    mockTx.select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    });
     const result = await archiveCourse('course-001', 'Archiving because it is outdated content');
     expect(result.ok).toBe(true);
+  });
+
+  it('cascades archive to modules and quizzes', async () => {
+    mockTx.returning.mockResolvedValueOnce([{ title: 'Test Course' }]);
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0 ? [] :                                       // course-level quizzes: none
+            callIndex === 1 ? [{ id: 'mod-001', title: 'Module A' }] :  // modules: 1
+            []                                                            // module-level quizzes: none
+          ),
+        }),
+      };
+    });
+
+    const result = await archiveCourse('course-001', 'Archiving because content is outdated');
+
+    expect(result.ok).toBe(true);
+    // update called: course (returning) + module cascade
+    expect(mockTx.update).toHaveBeenCalledTimes(2);
+    expect(auditLog.record).toHaveBeenCalledTimes(2);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'module_archived', target: 'mod-001' }),
+    );
   });
 });

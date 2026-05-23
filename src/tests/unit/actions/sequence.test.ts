@@ -50,6 +50,8 @@ vi.mock('@/lib/auth/db-user-id', () => ({
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
+import { auditLog } from '@/lib/audit/log';
+
 const {
   createSequence,
   updateSequence,
@@ -97,10 +99,50 @@ describe('archiveSequence', () => {
     expect(result.ok).toBe(false);
   });
 
-  it('accepts justification >= 10 characters', async () => {
+  it('accepts justification >= 10 characters (no cascade targets)', async () => {
     mockTx.returning.mockResolvedValueOnce([{ name: 'Test Seq' }]);
+    // Cascade: no courses in sequence
+    mockTx.select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    });
     const result = await archiveSequence('seq-001', 'Valid justification for archiving');
     expect(result.ok).toBe(true);
+  });
+
+  it('cascades archive through courses → modules → quizzes', async () => {
+    mockTx.returning.mockResolvedValueOnce([{ name: 'Test Seq' }]);
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0 ? [{ id: 'course-001', title: 'Course A' }] : // courses in sequence
+            callIndex === 1 ? [] :                                          // course-level quizzes: none
+            callIndex === 2 ? [{ id: 'mod-001', title: 'Module A' }] :     // modules: 1
+            [{ id: 'quiz-001', title: 'Module Quiz' }]                      // module quizzes: 1
+          ),
+        }),
+      };
+    });
+
+    const result = await archiveSequence('seq-001', 'Archiving entire learning path');
+
+    expect(result.ok).toBe(true);
+    // update: sequence (returning) + course + module + quiz = 4 calls
+    expect(mockTx.update).toHaveBeenCalledTimes(4);
+    expect(auditLog.record).toHaveBeenCalledTimes(4);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'course_archived', target: 'course-001' }),
+    );
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'module_archived', target: 'mod-001' }),
+    );
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'quiz_archived', target: 'quiz-001' }),
+    );
   });
 });
 

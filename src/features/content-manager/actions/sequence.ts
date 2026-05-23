@@ -1,10 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
-import { courseSequences } from '@/lib/db/schema/content';
+import { courseSequences, courses, modules, quizzes } from '@/lib/db/schema/content';
 import { auditLog } from '@/lib/audit/log';
 import { canPerform } from '@/lib/authority/can-perform';
 import { getDbUserId } from '@/lib/auth/db-user-id';
@@ -163,6 +163,61 @@ export async function archiveSequence(
         justification,
         metadata:      { sequence_id: id, name: seq.name, justification },
       });
+
+      // Cascade: archive non-archived courses in this sequence
+      const seqCourses = await tx
+        .select({ id: courses.id, title: courses.title })
+        .from(courses)
+        .where(and(eq(courses.sequence_id, id), ne(courses.status, 'archived')));
+
+      for (const course of seqCourses) {
+        await tx.update(courses).set({ status: 'archived', updated_at: new Date() }).where(eq(courses.id, course.id));
+        await auditLog.record({
+          actor: user.id, action: 'course_archived', target: course.id,
+          timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+          justification, metadata: { course_id: course.id, title: course.title, justification, cascade: true },
+        });
+
+        // Cascade: archive course-level quizzes
+        const courseQuizzes = await tx
+          .select({ id: quizzes.id, title: quizzes.title })
+          .from(quizzes)
+          .where(and(eq(quizzes.course_id, course.id), ne(quizzes.status, 'archived')));
+        for (const quiz of courseQuizzes) {
+          await tx.update(quizzes).set({ status: 'archived', updated_at: new Date() }).where(eq(quizzes.id, quiz.id));
+          await auditLog.record({
+            actor: user.id, action: 'quiz_archived', target: quiz.id,
+            timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+            justification, metadata: { quiz_id: quiz.id, title: quiz.title, course_id: course.id, justification, cascade: true },
+          });
+        }
+
+        // Cascade: archive modules and their quizzes
+        const courseModules = await tx
+          .select({ id: modules.id, title: modules.title })
+          .from(modules)
+          .where(and(eq(modules.course_id, course.id), ne(modules.status, 'archived')));
+        for (const mod of courseModules) {
+          await tx.update(modules).set({ status: 'archived', updated_at: new Date() }).where(eq(modules.id, mod.id));
+          await auditLog.record({
+            actor: user.id, action: 'module_archived', target: mod.id,
+            timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+            justification, metadata: { module_id: mod.id, title: mod.title, course_id: course.id, justification, cascade: true },
+          });
+          const modQuizzes = await tx
+            .select({ id: quizzes.id, title: quizzes.title })
+            .from(quizzes)
+            .where(and(eq(quizzes.module_id, mod.id), ne(quizzes.status, 'archived')));
+          for (const quiz of modQuizzes) {
+            await tx.update(quizzes).set({ status: 'archived', updated_at: new Date() }).where(eq(quizzes.id, quiz.id));
+            await auditLog.record({
+              actor: user.id, action: 'quiz_archived', target: quiz.id,
+              timestamp: new Date().toISOString(), category: 'CONFIG', tenantId: user.tenantId,
+              justification, metadata: { quiz_id: quiz.id, title: quiz.title, module_id: mod.id, justification, cascade: true },
+            });
+          }
+        }
+      }
     });
 
     revalidatePath('/admin/content');
