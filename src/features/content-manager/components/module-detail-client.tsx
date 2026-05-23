@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
 import { publishModule, archiveModule } from '../actions/module';
-import { moveLesson } from '../actions/lesson';
+import { moveLesson, createLesson } from '../actions/lesson';
+import { createModuleQuiz } from '../actions/quiz';
 
 interface LessonRow {
   id: string;
@@ -55,6 +56,10 @@ export function ModuleDetailClient({
   const [isPending, startTransition] = useTransition();
   const [isReordering, startReorder] = useTransition();
   const [reorderError, setReorderError] = useState<string | null>(null);
+  const [isAddingLesson, startAddLesson] = useTransition();
+  const [addLessonError, setAddLessonError] = useState<string | null>(null);
+  const [isAddingQuiz, startAddQuiz] = useTransition();
+  const [addQuizError, setAddQuizError] = useState<string | null>(null);
 
   function handleMove(lessonId: string, direction: 'up' | 'down') {
     setReorderError(null);
@@ -64,6 +69,34 @@ export function ModuleDetailClient({
         setReorderError((result as { ok: false; error: string }).error);
       } else {
         router.refresh();
+      }
+    });
+  }
+
+  function handleAddLesson() {
+    setAddLessonError(null);
+    startAddLesson(async () => {
+      const result = await createLesson(id, {
+        title: 'Untitled Lesson',
+        slug: `untitled-lesson-${Date.now()}`,
+        lesson_type: 'overview',
+      });
+      if (!result.ok) {
+        setAddLessonError((result as { ok: false; error: string }).error);
+      } else {
+        router.push(`/admin/content/modules/${id}/lessons/${result.data.id}`);
+      }
+    });
+  }
+
+  function handleAddQuiz() {
+    setAddQuizError(null);
+    startAddQuiz(async () => {
+      const result = await createModuleQuiz(id, { title: 'Module Quiz' });
+      if (!result.ok) {
+        setAddQuizError((result as { ok: false; error: string }).error);
+      } else {
+        router.push(`/admin/content/modules/${id}/quizzes/${result.data.id}`);
       }
     });
   }
@@ -132,9 +165,17 @@ export function ModuleDetailClient({
 
       {/* Lessons */}
       <div>
-        <h2 className="text-base font-medium text-slate-700 mb-3">
-          Lessons <span className="text-slate-400 font-normal">({lessons.length})</span>
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-medium text-slate-700">
+            Lessons <span className="text-slate-400 font-normal">({lessons.length})</span>
+          </h2>
+          <Button size="sm" onClick={handleAddLesson} disabled={isAddingLesson}>
+            {isAddingLesson ? 'Creating…' : '+ Add Lesson'}
+          </Button>
+        </div>
+        {addLessonError && (
+          <p className="text-sm text-destructive mb-2">{addLessonError}</p>
+        )}
         {lessons.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
             No lessons yet.
@@ -172,11 +213,25 @@ export function ModuleDetailClient({
       </div>
 
       {/* Quizzes */}
-      {quizzes.length > 0 && (
-        <div>
-          <h2 className="text-base font-medium text-slate-700 mb-3">
-            Quizzes <span className="text-slate-400 font-normal">({quizzes.length})</span>
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-medium text-slate-700">
+            Quiz <span className="text-slate-400 font-normal">({quizzes.length})</span>
           </h2>
+          {quizzes.length === 0 && (
+            <Button size="sm" onClick={handleAddQuiz} disabled={isAddingQuiz}>
+              {isAddingQuiz ? 'Creating…' : '+ Add Quiz'}
+            </Button>
+          )}
+        </div>
+        {addQuizError && (
+          <p className="text-sm text-destructive mb-2">{addQuizError}</p>
+        )}
+        {quizzes.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
+            No quiz yet.
+          </div>
+        ) : (
           <div className="rounded-lg border border-slate-200 divide-y divide-slate-100">
             {quizzes.map((quiz) => (
               <div key={quiz.id} className="flex items-center gap-3 px-4 py-3">
@@ -187,11 +242,14 @@ export function ModuleDetailClient({
                   {quiz.title}
                 </Link>
                 <span className="text-xs text-slate-500 capitalize">{quiz.quizType.replace('_', ' ')}</span>
+                <Button asChild size="xs" variant="ghost" className="text-xs text-slate-500">
+                  <Link href={`/admin/content/modules/${id}/quizzes/${quiz.id}`}>Edit</Link>
+                </Button>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <ArchiveDialog
         entityLabel={`"${title}"`}
