@@ -9,12 +9,20 @@ import { ArchiveDialog } from './archive-dialog';
 import { DeleteDialog } from './delete-dialog';
 import { publishCourse, archiveCourse, deleteCourse } from '../actions/course';
 import { moveModule } from '../actions/module';
+import { createCourseQuiz } from '../actions/quiz';
 
 interface ModuleRow {
   id: string;
   title: string;
   status: string;
   moduleOrder: number;
+}
+
+interface CourseQuizRow {
+  id: string;
+  title: string;
+  quizType: string;
+  status: string;
 }
 
 interface UnlockItem {
@@ -36,6 +44,7 @@ interface CourseDetailClientProps {
   createdAt: string;
   updatedAt: string;
   modules: ModuleRow[];
+  courseQuizzes: CourseQuizRow[];
   isAdmin?: boolean;
 }
 
@@ -62,10 +71,13 @@ export function CourseDetailClient({
   createdAt,
   updatedAt,
   modules,
+  courseQuizzes,
   isAdmin = false,
 }: CourseDetailClientProps) {
   const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [isCreatingQuiz, startCreateQuiz] = useTransition();
+  const [createQuizError, setCreateQuizError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -85,6 +97,21 @@ export function CourseDetailClient({
         setReorderError((result as { ok: false; error: string }).error);
       } else {
         router.refresh();
+      }
+    });
+  }
+
+  function handleAddCourseQuiz() {
+    setCreateQuizError(null);
+    startCreateQuiz(async () => {
+      const result = await createCourseQuiz(id, {
+        title:     'Untitled Quiz',
+        quiz_type: 'multiple_choice',
+      });
+      if (!result.ok) {
+        setCreateQuizError(result.error);
+      } else {
+        router.push(`/admin/content/courses/${id}/course-quizzes/${result.data.id}`);
       }
     });
   }
@@ -213,6 +240,43 @@ export function CourseDetailClient({
                     onClick={() => handleMove(mod.id, 'down')}
                   >↓</Button>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Course Quizzes */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-medium text-slate-700">
+            Course Quizzes <span className="text-slate-400 font-normal">({courseQuizzes.length})</span>
+          </h2>
+          <Button size="sm" variant="outline" onClick={handleAddCourseQuiz} disabled={isCreatingQuiz}>
+            {isCreatingQuiz ? 'Creating…' : '+ Add Course Quiz'}
+          </Button>
+        </div>
+
+        {createQuizError && (
+          <p className="text-sm text-destructive mb-2">{createQuizError}</p>
+        )}
+
+        {courseQuizzes.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-200 py-10 text-center text-sm text-slate-400">
+            No course quizzes yet. Add a quiz to assess learner comprehension.
+          </div>
+        ) : (
+          <div className="rounded-lg border border-slate-200 divide-y divide-slate-100">
+            {courseQuizzes.map((quiz) => (
+              <div key={quiz.id} className="flex items-center gap-3 px-4 py-3">
+                <Link
+                  href={`/admin/content/courses/${id}/course-quizzes/${quiz.id}`}
+                  className="flex-1 text-sm font-medium text-brand-700 hover:underline"
+                >
+                  {quiz.title}
+                </Link>
+                <span className="text-xs text-slate-400 capitalize">{quiz.quizType.replace('_', ' ')}</span>
+                <StatusBadge status={quiz.status} />
               </div>
             ))}
           </div>

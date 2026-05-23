@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and, isNull } from 'drizzle-orm';
 import { withCurrentSession } from '@/lib/db/client';
-import { courses, modules, courseSequences } from '@/lib/db/schema/content';
+import { courses, modules, courseSequences, quizzes } from '@/lib/db/schema/content';
 import { getCurrentUser } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/authority/roles';
 import { CourseDetailClient } from '@/features/content-manager/components/course-detail-client';
@@ -39,11 +39,9 @@ export default async function CourseDetailPage({
 
   if (!course) notFound();
 
-  // Phase 2: two independent reads — each gets its own pg client via a fresh
-  // withCurrentSession call, so they can safely run in parallel via Promise.all.
-  // seqId captured as a local const so TypeScript narrows it to string in the callback.
+  // Phase 2: independent reads in parallel — each gets its own pg client.
   const seqId = course.sequenceId;
-  const [moduleRows, seqRow] = await Promise.all([
+  const [moduleRows, seqRow, quizRows] = await Promise.all([
     withCurrentSession((tx) =>
       tx
         .select({
@@ -65,6 +63,18 @@ export default async function CourseDetailPage({
             .then((rows) => rows[0] ?? null),
         )
       : Promise.resolve(null),
+    withCurrentSession((tx) =>
+      tx
+        .select({
+          id:       quizzes.id,
+          title:    quizzes.title,
+          quizType: quizzes.quiz_type,
+          status:   quizzes.status,
+        })
+        .from(quizzes)
+        .where(and(eq(quizzes.course_id, courseId), isNull(quizzes.module_id)))
+        .orderBy(asc(quizzes.created_at)),
+    ),
   ]);
 
   return (
@@ -86,6 +96,12 @@ export default async function CourseDetailPage({
         title:       m.title,
         status:      m.status,
         moduleOrder: m.moduleOrder,
+      }))}
+      courseQuizzes={quizRows.map((q) => ({
+        id:       q.id,
+        title:    q.title,
+        quizType: q.quizType,
+        status:   q.status,
       }))}
       isAdmin={user ? isAdmin(user) : false}
     />

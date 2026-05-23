@@ -2,19 +2,19 @@ import { notFound } from 'next/navigation';
 import { eq, asc } from 'drizzle-orm';
 import Link from 'next/link';
 import { withCurrentSession } from '@/lib/db/client';
-import { quizzes, quizQuestions, modules } from '@/lib/db/schema/content';
+import { quizzes, quizQuestions, courses } from '@/lib/db/schema/content';
 import { getCurrentUser } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/authority/roles';
 import { AdminDeleteSection } from '@/features/content-manager/components/admin-delete-section';
 import { deleteQuiz } from '@/features/content-manager/actions/quiz';
 import { QuizEditor, type QuestionRow } from '@/features/content-manager/components/quiz-editor';
 
-export default async function ModuleQuizPage({
+export default async function CourseQuizPage({
   params,
 }: {
-  params: Promise<{ moduleId: string; quizId: string }>;
+  params: Promise<{ courseId: string; quizId: string }>;
 }) {
-  const { moduleId, quizId } = await params;
+  const { courseId, quizId } = await params;
 
   const [data, user] = await Promise.all([
     withCurrentSession(async (tx) => {
@@ -32,11 +32,11 @@ export default async function ModuleQuizPage({
 
       if (!quiz) return null;
 
-      const [mod, questions] = await Promise.all([
+      const [course, questions] = await Promise.all([
         tx
-          .select({ id: modules.id, title: modules.title })
-          .from(modules)
-          .where(eq(modules.id, moduleId))
+          .select({ id: courses.id, title: courses.title })
+          .from(courses)
+          .where(eq(courses.id, courseId))
           .then((rows) => rows[0] ?? null),
         tx
           .select({
@@ -56,25 +56,25 @@ export default async function ModuleQuizPage({
           .orderBy(asc(quizQuestions.question_order)),
       ]);
 
-      return { quiz, mod, questions };
+      return { quiz, course, questions };
     }),
     getCurrentUser(),
   ]);
 
   if (!data) notFound();
 
-  const { quiz, mod, questions } = data;
+  const { quiz, course, questions } = data;
   const userIsAdmin = user ? isAdmin(user) : false;
-  const moduleHref = `/admin/content/modules/${moduleId}`;
+  const courseHref = `/admin/content/courses/${courseId}`;
 
   return (
     <div className="space-y-4">
       <p className="text-xs text-slate-500">
         <Link href="/admin/content" className="hover:underline">Content</Link>
-        {mod && (
+        {course && (
           <>
             {' › '}
-            <Link href={moduleHref} className="hover:underline">{mod.title}</Link>
+            <Link href={courseHref} className="hover:underline">{course.title}</Link>
           </>
         )}
         {' › '}
@@ -89,8 +89,8 @@ export default async function ModuleQuizPage({
         initialQuestions={questions as QuestionRow[]}
         initialUpdatedAt={quiz.updatedAt.toISOString()}
         quizTitle={quiz.title}
-        parentTitle={mod?.title ?? 'Module'}
-        parentHref={moduleHref}
+        parentTitle={course?.title ?? 'Course'}
+        parentHref={courseHref}
       />
 
       {userIsAdmin && quiz.status === 'archived' && (
@@ -98,7 +98,7 @@ export default async function ModuleQuizPage({
           entityType="Quiz"
           entityName={quiz.title}
           onDelete={deleteQuiz.bind(null, quizId)}
-          redirectTo={moduleHref}
+          redirectTo={courseHref}
         />
       )}
     </div>
