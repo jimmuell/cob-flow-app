@@ -10,7 +10,7 @@ INSERT INTO teams (id, name, description) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO users (id, name, initials, role, status, team_id, level) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'S. Patel',    'SP', 'ADMIN',      'ACTIVE', NULL,                                   NULL),
+  ('00000000-0000-0000-0000-000000000001', 'A. Donnelly', 'AD', 'ADMIN',      'ACTIVE', NULL,                                   NULL),
   ('00000000-0000-0000-0000-000000000002', 'D. Berger',   'DB', 'MANAGER',    'ACTIVE', NULL,                                   NULL),
   ('00000000-0000-0000-0000-000000000003', 'T. Ramos',    'TR', 'SUPERVISOR', 'ACTIVE', '00000000-0000-0000-0000-000000000010', NULL),
   ('00000000-0000-0000-0000-000000000004', 'S. Bergstrom','SB', 'SUPERVISOR', 'ACTIVE', '00000000-0000-0000-0000-000000000011', NULL),
