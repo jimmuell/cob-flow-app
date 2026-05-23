@@ -42,7 +42,7 @@ export const USERS: User[] = [
     teamId: null,
   },
   {
-    id: "u_ad", name: "S. Patel", initials: "SP", role: "ADMIN", status: "ACTIVE",
+    id: "u_ad", name: "A. Donnelly", initials: "AD", role: "ADMIN", status: "ACTIVE",
     teamId: null,
   },
 ];

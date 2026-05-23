@@ -26,7 +26,7 @@ test.describe('Admin Content Catalog', () => {
     await expect(page).toHaveURL('/admin/content');
 
     await expect(page.getByText('Content Catalog')).toBeVisible();
-    await expect(page.getByRole('tab', { name: /Sequences/ })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /Learning Paths/ })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Courses/ })).toBeVisible();
     await expect(page.getByRole('tab', { name: /Quizzes/ })).toBeVisible();
   });
@@ -34,11 +34,12 @@ test.describe('Admin Content Catalog', () => {
   test('admin can navigate to New Sequence form', async ({ page }) => {
     await page.goto('/signin');
     await page.getByRole('button', { name: /A\. Donnelly/ }).click();
+    await expect(page).toHaveURL('/dashboard');
     await page.goto('/admin/content');
 
-    await page.getByRole('link', { name: '+ New Sequence' }).click();
+    await page.getByRole('link', { name: '+ New Learning Path' }).click();
     await expect(page).toHaveURL('/admin/content/sequences/new');
-    await expect(page.getByText('New Sequence')).toBeVisible();
+    await expect(page.getByText('New Learning Path')).toBeVisible();
     await expect(page.getByLabel('Name *')).toBeVisible();
     await expect(page.getByLabel('Slug *')).toBeVisible();
   });
@@ -46,6 +47,7 @@ test.describe('Admin Content Catalog', () => {
   test('New Sequence form auto-generates slug from name', async ({ page }) => {
     await page.goto('/signin');
     await page.getByRole('button', { name: /A\. Donnelly/ }).click();
+    await expect(page).toHaveURL('/dashboard');
     await page.goto('/admin/content/sequences/new');
 
     await page.getByLabel('Name *').fill('Auto COB Wisconsin');
@@ -55,6 +57,7 @@ test.describe('Admin Content Catalog', () => {
   test('admin can navigate to New Course form', async ({ page }) => {
     await page.goto('/signin');
     await page.getByRole('button', { name: /A\. Donnelly/ }).click();
+    await expect(page).toHaveURL('/dashboard');
     await page.goto('/admin/content');
 
     await page.getByRole('tab', { name: /Courses/ }).click();
