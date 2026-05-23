@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { courses } from '@/lib/db/schema/content';
@@ -46,7 +46,9 @@ export async function createCourse(
   const perm = canPerform({ user, action: 'CREATE_COURSE' });
   if (perm.decision === 'deny') return { ok: false, error: perm.reason };
 
-  const validated = courseFormSchema.safeParse(input);
+  // Normalize empty-string sequence_id (from unselected <select>) to undefined before validation
+  const normalizedInput = { ...input, sequence_id: input.sequence_id === '' ? undefined : input.sequence_id };
+  const validated = courseFormSchema.safeParse(normalizedInput);
   if (!validated.success) {
     return { ok: false, error: validated.error.issues[0]?.message ?? 'Invalid input' };
   }
@@ -54,20 +56,36 @@ export async function createCourse(
   try {
     const authorDbId = getDbUserId(user.id);
     const result = await withCurrentSession(async (tx) => {
-      const unlockDef = validated.data.unlock_definition?.length
-        ? await clampUnlockDefinition(validated.data.unlock_definition, tx)
+      const sanitized = {
+        ...validated.data,
+        description:       !validated.data.description || validated.data.description === '' ? null : validated.data.description,
+        unlock_definition: !validated.data.unlock_definition || validated.data.unlock_definition.length === 0 ? null : validated.data.unlock_definition,
+      };
+
+      if (sanitized.sequence_id && sanitized.sequence_order == null) {
+        const execResult = await tx.execute(sql`
+          SELECT COALESCE(MAX(sequence_order), 0) AS max_order
+          FROM courses
+          WHERE sequence_id = ${sanitized.sequence_id}
+        `);
+        const rows = execResult as unknown as Array<Record<string, unknown>>;
+        sanitized.sequence_order = Number(rows[0]?.max_order ?? 0) + 1;
+      }
+
+      const unlockDef = sanitized.unlock_definition?.length
+        ? await clampUnlockDefinition(sanitized.unlock_definition, tx)
         : null;
 
       const [course] = await tx
         .insert(courses)
         .values({
-          title:             validated.data.title,
-          slug:              validated.data.slug,
-          description:       validated.data.description,
-          audience:          validated.data.audience,
-          estimated_hours:   validated.data.estimated_hours,
-          sequence_id:       validated.data.sequence_id,
-          sequence_order:    validated.data.sequence_order,
+          title:             sanitized.title,
+          slug:              sanitized.slug,
+          description:       sanitized.description,
+          audience:          sanitized.audience,
+          estimated_hours:   sanitized.estimated_hours,
+          sequence_id:       sanitized.sequence_id,
+          sequence_order:    sanitized.sequence_order,
           unlock_definition: unlockDef,
           content_type:      'platform',
           tenant_id:         null,
@@ -106,26 +124,43 @@ export async function updateCourse(
   const perm = canPerform({ user, action: 'UPDATE_COURSE' });
   if (perm.decision === 'deny') return { ok: false, error: perm.reason };
 
-  const validated = courseFormSchema.safeParse(input);
+  const normalizedInput = { ...input, sequence_id: input.sequence_id === '' ? undefined : input.sequence_id };
+  const validated = courseFormSchema.safeParse(normalizedInput);
   if (!validated.success) {
     return { ok: false, error: validated.error.issues[0]?.message ?? 'Invalid input' };
   }
 
   try {
     await withCurrentSession(async (tx) => {
-      const unlockDef = validated.data.unlock_definition?.length
-        ? await clampUnlockDefinition(validated.data.unlock_definition, tx)
+      const sanitized = {
+        ...validated.data,
+        description:       !validated.data.description || validated.data.description === '' ? null : validated.data.description,
+        unlock_definition: !validated.data.unlock_definition || validated.data.unlock_definition.length === 0 ? null : validated.data.unlock_definition,
+      };
+
+      if (sanitized.sequence_id && sanitized.sequence_order == null) {
+        const execResult = await tx.execute(sql`
+          SELECT COALESCE(MAX(sequence_order), 0) AS max_order
+          FROM courses
+          WHERE sequence_id = ${sanitized.sequence_id} AND id != ${id}
+        `);
+        const rows = execResult as unknown as Array<Record<string, unknown>>;
+        sanitized.sequence_order = Number(rows[0]?.max_order ?? 0) + 1;
+      }
+
+      const unlockDef = sanitized.unlock_definition?.length
+        ? await clampUnlockDefinition(sanitized.unlock_definition, tx)
         : null;
 
       await tx
         .update(courses)
         .set({
-          title:             validated.data.title,
-          slug:              validated.data.slug,
-          description:       validated.data.description,
-          estimated_hours:   validated.data.estimated_hours,
-          sequence_id:       validated.data.sequence_id,
-          sequence_order:    validated.data.sequence_order,
+          title:             sanitized.title,
+          slug:              sanitized.slug,
+          description:       sanitized.description,
+          estimated_hours:   sanitized.estimated_hours,
+          sequence_id:       sanitized.sequence_id,
+          sequence_order:    sanitized.sequence_order,
           unlock_definition: unlockDef,
           updated_at:        new Date(),
         })

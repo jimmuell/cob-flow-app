@@ -98,6 +98,9 @@ export function SequenceDetailClient({
           <h2 className="text-base font-medium text-slate-700">
             Courses <span className="text-slate-400 font-normal">({courses.length})</span>
           </h2>
+          <Button asChild size="sm" variant="outline">
+            <Link href={`/admin/content/courses/new?sequence_id=${id}`}>+ Add Course</Link>
+          </Button>
         </div>
 
         {courses.length === 0 ? (

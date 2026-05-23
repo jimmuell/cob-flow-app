@@ -50,6 +50,7 @@ const mockTx = {
   where:     vi.fn().mockReturnThis(),
   select:    vi.fn().mockReturnThis(),
   from:      vi.fn().mockResolvedValue(CEILING_ROWS),
+  execute:   vi.fn().mockResolvedValue([{ max_order: 0 }]),
 };
 
 vi.mock('@/lib/db/client', () => ({
@@ -95,6 +96,37 @@ describe('createCourse validation', () => {
     });
     expect(result.ok).toBe(true);
     expect((result as { ok: true; data: { id: string } }).data.id).toBe('course-001');
+  });
+});
+
+describe('createCourse – sequence handling', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('treats empty-string sequence_id as unassigned (no Zod error)', async () => {
+    const result = await createCourse({
+      title: 'Test', slug: 'test', audience: 'analyst',
+      sequence_id: '',
+    });
+    // Before fix: z.string().uuid() rejects '' → ok: false
+    // After fix: '' → undefined via preprocess → ok: true
+    expect(result.ok).toBe(true);
+  });
+
+  it('auto-computes sequence_order when sequence_id is set without order', async () => {
+    mockTx.execute.mockResolvedValueOnce([{ max_order: 2 }]);
+
+    const result = await createCourse({
+      title: 'Seq Course', slug: 'seq-course', audience: 'analyst',
+      sequence_id: '00000000-0000-4000-a000-000000000001',
+      // sequence_order intentionally omitted
+    });
+
+    expect(result.ok).toBe(true);
+    // Before fix: execute never called, sequence_order undefined in values
+    // After fix: execute called once, sequence_order = 3 (max_order 2 + 1)
+    expect(mockTx.execute).toHaveBeenCalledTimes(1);
+    const insertedValues = mockTx.values.mock.calls[0][0] as Record<string, unknown>;
+    expect(insertedValues.sequence_order).toBe(3);
   });
 });
 

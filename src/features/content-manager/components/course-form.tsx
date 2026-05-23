@@ -138,6 +138,22 @@ export function CourseForm({ courseId, defaultValues, sequences = [] }: CourseFo
           </div>
         )}
 
+        {sequences.length > 0 && (
+          <div className="space-y-1.5">
+            <Label htmlFor="sequence_order">Position in sequence</Label>
+            <Input
+              id="sequence_order"
+              type="number"
+              min="1"
+              {...register('sequence_order', { valueAsNumber: true, setValueAs: (v) => v === '' ? undefined : Number(v) })}
+              placeholder="Auto-computed if left blank"
+              aria-invalid={!!errors.sequence_order}
+            />
+            {errors.sequence_order && <p className="text-xs text-destructive">{errors.sequence_order.message}</p>}
+            <p className="text-xs text-slate-500">Order within the sequence. Auto-computed if left blank.</p>
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <Label>Audience</Label>
           <p className="text-sm text-slate-500">Analyst (only supported audience in v1)</p>
