@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
+import Link from 'next/link';
 import { withCurrentSession } from '@/lib/db/client';
 import { courses, courseSequences } from '@/lib/db/schema/content';
 import { CourseForm } from '@/features/content-manager/components/course-form';
@@ -44,6 +45,9 @@ export default async function EditCoursePage({
 
   return (
     <div className="space-y-4">
+      <Link href={`/admin/content/courses/${course.id}`} className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        ← {course.title}
+      </Link>
       <h1 className="text-xl font-semibold text-slate-800">Edit Course</h1>
       <CourseForm
         courseId={course.id}

@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
 import { publishModule, archiveModule } from '../actions/module';
+import { moveLesson } from '../actions/lesson';
 
 interface LessonRow {
   id: string;
@@ -47,9 +49,24 @@ export function ModuleDetailClient({
   lessons,
   quizzes,
 }: ModuleDetailClientProps) {
+  const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isReordering, startReorder] = useTransition();
+  const [reorderError, setReorderError] = useState<string | null>(null);
+
+  function handleMove(lessonId: string, direction: 'up' | 'down') {
+    setReorderError(null);
+    startReorder(async () => {
+      const result = await moveLesson(lessonId, direction);
+      if (!result.ok) {
+        setReorderError((result as { ok: false; error: string }).error);
+      } else {
+        router.refresh();
+      }
+    });
+  }
 
   function handlePublish() {
     setPublishError(null);
@@ -109,6 +126,9 @@ export function ModuleDetailClient({
       {publishError && (
         <p className="text-sm text-destructive">{publishError}</p>
       )}
+      {reorderError && (
+        <p className="text-sm text-destructive">{reorderError}</p>
+      )}
 
       {/* Lessons */}
       <div>
@@ -131,6 +151,20 @@ export function ModuleDetailClient({
                   {lesson.title}
                 </Link>
                 <span className="text-xs text-slate-500 capitalize">{lesson.lessonType.replace('-', ' ')}</span>
+                <div className="flex gap-1">
+                  <Button
+                    size="xs" variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    disabled={isReordering || idx === 0}
+                    onClick={() => handleMove(lesson.id, 'up')}
+                  >↑</Button>
+                  <Button
+                    size="xs" variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    disabled={isReordering || idx === lessons.length - 1}
+                    onClick={() => handleMove(lesson.id, 'down')}
+                  >↓</Button>
+                </div>
               </div>
             ))}
           </div>

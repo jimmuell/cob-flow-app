@@ -27,6 +27,7 @@ export type AuthorityAction =
   | "PUBLISH_MODULE"
   | "ARCHIVE_MODULE"
   | "CREATE_LESSON"
+  | "UPDATE_LESSON"
   | "CREATE_QUIZ";
 
 export type ApprovalQueueType =

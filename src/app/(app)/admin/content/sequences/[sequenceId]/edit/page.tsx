@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
+import Link from 'next/link';
 import { withCurrentSession } from '@/lib/db/client';
 import { courseSequences } from '@/lib/db/schema/content';
 import { SequenceForm } from '@/features/content-manager/components/sequence-form';
@@ -29,6 +30,9 @@ export default async function EditSequencePage({
 
   return (
     <div className="space-y-4">
+      <Link href={`/admin/content/sequences/${seq.id}`} className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        ← {seq.name}
+      </Link>
       <h1 className="text-xl font-semibold text-slate-800">Edit Sequence</h1>
       <SequenceForm
         sequenceId={seq.id}

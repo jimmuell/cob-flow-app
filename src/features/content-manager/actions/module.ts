@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, max, gte, sql } from 'drizzle-orm';
+import { eq, max, gte, sql, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { modules } from '@/lib/db/schema/content';
@@ -183,6 +183,81 @@ export async function publishModule(id: string): Promise<ActionResult> {
     return { ok: true, data: undefined };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to publish module' };
+  }
+}
+
+export async function moveModule(
+  moduleId: string,
+  direction: 'up' | 'down',
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  const perm = canPerform({ user, action: 'UPDATE_MODULE' });
+  if (perm.decision === 'deny') return { ok: false, error: perm.reason };
+
+  try {
+    let courseId: string | null = null;
+
+    await withCurrentSession(async (tx) => {
+      const [current] = await tx
+        .select({
+          id:           modules.id,
+          module_order: modules.module_order,
+          course_id:    modules.course_id,
+          title:        modules.title,
+        })
+        .from(modules)
+        .where(eq(modules.id, moduleId));
+
+      if (!current) return;
+      courseId = current.course_id;
+
+      const neighborOrder = direction === 'up'
+        ? current.module_order - 1
+        : current.module_order + 1;
+
+      const [neighbor] = await tx
+        .select({ id: modules.id, module_order: modules.module_order })
+        .from(modules)
+        .where(and(
+          eq(modules.course_id, current.course_id),
+          eq(modules.module_order, neighborOrder),
+        ));
+
+      if (!neighbor) return;
+
+      await tx.execute(sql`
+        UPDATE modules
+        SET module_order = CASE
+          WHEN id = ${current.id}  THEN ${neighbor.module_order}
+          WHEN id = ${neighbor.id} THEN ${current.module_order}
+        END
+        WHERE id IN (${current.id}, ${neighbor.id})
+      `);
+
+      await auditLog.record({
+        actor:     user.id,
+        action:    'module_reordered',
+        target:    moduleId,
+        timestamp: new Date().toISOString(),
+        category:  'CONFIG',
+        tenantId:  user.tenantId,
+        metadata:  {
+          module_id:  moduleId,
+          title:      current.title,
+          direction,
+          from_order: current.module_order,
+          to_order:   neighbor.module_order,
+        },
+      });
+    });
+
+    revalidatePath('/admin/content');
+    if (courseId) revalidatePath(`/admin/content/courses/${courseId}`);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to reorder module' };
   }
 }
 

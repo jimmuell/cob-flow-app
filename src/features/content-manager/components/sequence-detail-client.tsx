@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
 import { publishSequence, archiveSequence } from '../actions/sequence';
+import { moveCourse } from '../actions/course';
 
 interface CourseRow {
   id: string;
@@ -37,9 +39,24 @@ export function SequenceDetailClient({
   updatedAt,
   courses,
 }: SequenceDetailClientProps) {
+  const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isReordering, startReorder] = useTransition();
+  const [reorderError, setReorderError] = useState<string | null>(null);
+
+  function handleMove(courseId: string, direction: 'up' | 'down') {
+    setReorderError(null);
+    startReorder(async () => {
+      const result = await moveCourse(courseId, direction);
+      if (!result.ok) {
+        setReorderError((result as { ok: false; error: string }).error);
+      } else {
+        router.refresh();
+      }
+    });
+  }
 
   function handlePublish() {
     setPublishError(null);
@@ -51,6 +68,11 @@ export function SequenceDetailClient({
 
   return (
     <div className="space-y-6">
+      {/* Back nav */}
+      <Link href="/admin/content?tab=sequences" className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        ← Content
+      </Link>
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-1">
@@ -93,6 +115,9 @@ export function SequenceDetailClient({
       )}
 
       {/* Course list */}
+      {reorderError && (
+        <p className="text-sm text-destructive">{reorderError}</p>
+      )}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-medium text-slate-700">
@@ -120,8 +145,18 @@ export function SequenceDetailClient({
                 </Link>
                 <StatusBadge status={course.status} />
                 <div className="flex gap-1">
-                  <Button size="xs" variant="ghost" disabled className="h-6 w-6 p-0 text-slate-400">↑</Button>
-                  <Button size="xs" variant="ghost" disabled className="h-6 w-6 p-0 text-slate-400">↓</Button>
+                  <Button
+                    size="xs" variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    disabled={isReordering || idx === 0}
+                    onClick={() => handleMove(course.id, 'up')}
+                  >↑</Button>
+                  <Button
+                    size="xs" variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    disabled={isReordering || idx === courses.length - 1}
+                    onClick={() => handleMove(course.id, 'down')}
+                  >↓</Button>
                 </div>
               </div>
             ))}

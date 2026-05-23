@@ -48,6 +48,7 @@ interface CatalogClientProps {
   sequences: SequenceRow[];
   courses: CourseRow[];
   quizzes: QuizRow[];
+  defaultTab?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -183,8 +184,12 @@ const quizCols: ColumnDef<QuizRow>[] = [
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function CatalogClient({ sequences, courses, quizzes }: CatalogClientProps) {
-  const [activeTab, setActiveTab] = useState('sequences');
+const VALID_TABS = ['sequences', 'courses', 'quizzes'] as const;
+
+export function CatalogClient({ sequences, courses, quizzes, defaultTab }: CatalogClientProps) {
+  const [activeTab, setActiveTab] = useState(
+    defaultTab && (VALID_TABS as readonly string[]).includes(defaultTab) ? defaultTab : 'sequences',
+  );
 
   const newHref = activeTab === 'sequences'
     ? '/admin/content/sequences/new'

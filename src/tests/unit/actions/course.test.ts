@@ -63,7 +63,9 @@ vi.mock('@/lib/auth/db-user-id', () => ({
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-const { createCourse, archiveCourse } = await import('@/features/content-manager/actions/course');
+import { auditLog } from '@/lib/audit/log';
+
+const { createCourse, archiveCourse, moveCourse } = await import('@/features/content-manager/actions/course');
 
 describe('createCourse validation', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -127,6 +129,57 @@ describe('createCourse – sequence handling', () => {
     expect(mockTx.execute).toHaveBeenCalledTimes(1);
     const insertedValues = mockTx.values.mock.calls[0][0] as Record<string, unknown>;
     expect(insertedValues.sequence_order).toBe(3);
+  });
+});
+
+describe('moveCourse', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('swaps sequence_order with neighbor and emits audit event', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'course-001', sequence_order: 2, sequence_id: 'seq-001', title: 'Course A' }]
+              : [{ id: 'course-002', sequence_order: 1 }]
+          ),
+        }),
+      };
+    });
+    mockTx.execute = vi.fn().mockResolvedValue(undefined);
+
+    const result = await moveCourse('course-001', 'up');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.execute).toHaveBeenCalledTimes(1);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'course_reordered', target: 'course-001' }),
+    );
+  });
+
+  it('returns ok:true without swapping when no neighbor exists', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'course-001', sequence_order: 1, sequence_id: 'seq-001', title: 'Course A' }]
+              : []
+          ),
+        }),
+      };
+    });
+    mockTx.execute = vi.fn().mockResolvedValue(undefined);
+
+    const result = await moveCourse('course-001', 'up');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.execute).not.toHaveBeenCalled();
   });
 });
 

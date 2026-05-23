@@ -56,6 +56,7 @@ const mockTx = {
   update:    mockUpdate,
   set:       mockSet,
   where:     mockWhere,
+  execute:   vi.fn().mockResolvedValue(undefined),
 };
 
 // select().from() for max-order query returns [{ maxOrder: 2 }]
@@ -70,7 +71,9 @@ vi.mock('@/lib/db/client', () => ({
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
-const { createModule, archiveModule } = await import('@/features/content-manager/actions/module');
+import { auditLog } from '@/lib/audit/log';
+
+const { createModule, archiveModule, moveModule } = await import('@/features/content-manager/actions/module');
 
 describe('createModule validation', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -102,6 +105,57 @@ describe('createModule validation', () => {
     const result = await createModule('course-001', { title: 'Intro Module', slug: 'intro-module' });
     expect(result.ok).toBe(true);
     expect((result as { ok: true; data: { id: string } }).data.id).toBe('mod-001');
+  });
+});
+
+describe('moveModule', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('swaps module_order with neighbor and emits audit event', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'mod-001', module_order: 2, course_id: 'course-001', title: 'Module A' }]
+              : [{ id: 'mod-002', module_order: 1 }]
+          ),
+        }),
+      };
+    });
+    mockTx.execute = vi.fn().mockResolvedValue(undefined);
+
+    const result = await moveModule('mod-001', 'up');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.execute).toHaveBeenCalledTimes(1);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'module_reordered', target: 'mod-001' }),
+    );
+  });
+
+  it('returns ok:true without swapping when no neighbor exists', async () => {
+    let selectCallCount = 0;
+    mockTx.select = vi.fn().mockImplementation(() => {
+      const callIndex = selectCallCount++;
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(
+            callIndex === 0
+              ? [{ id: 'mod-001', module_order: 1, course_id: 'course-001', title: 'Module A' }]
+              : []
+          ),
+        }),
+      };
+    });
+    mockTx.execute = vi.fn().mockResolvedValue(undefined);
+
+    const result = await moveModule('mod-001', 'up');
+
+    expect(result.ok).toBe(true);
+    expect(mockTx.execute).not.toHaveBeenCalled();
   });
 });
 

@@ -50,6 +50,10 @@ export default async function LessonPlaceholderPage({
         {lesson.title}
       </p>
 
+      <Link href={`/admin/content/modules/${moduleId}`} className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        ← {mod?.title ?? 'Module'}
+      </Link>
+
       <div className="space-y-1">
         <h1 className="text-xl font-semibold text-slate-800">{lesson.title}</h1>
         <p className="text-xs text-slate-500">

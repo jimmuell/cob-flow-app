@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, max } from 'drizzle-orm';
+import { eq, max, sql, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { lessons } from '@/lib/db/schema/content';
@@ -12,7 +12,7 @@ import type { LessonCreateInput } from '../schemas/lesson';
 
 type ActionResult<T = void> = { ok: true; data: T } | { ok: false; error: string };
 
-// ─── Action ────────────────────────────────────────────────────────────────────
+// ─── Actions ────────────────────────────────────────────────────────────────────
 
 export async function createLesson(
   moduleId: string,
@@ -67,5 +67,79 @@ export async function createLesson(
     return { ok: true, data: { id: result.id } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to create lesson' };
+  }
+}
+
+export async function moveLesson(
+  lessonId: string,
+  direction: 'up' | 'down',
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  const perm = canPerform({ user, action: 'UPDATE_LESSON' });
+  if (perm.decision === 'deny') return { ok: false, error: perm.reason };
+
+  try {
+    let moduleId: string | null = null;
+
+    await withCurrentSession(async (tx) => {
+      const [current] = await tx
+        .select({
+          id:           lessons.id,
+          lesson_order: lessons.lesson_order,
+          module_id:    lessons.module_id,
+          title:        lessons.title,
+        })
+        .from(lessons)
+        .where(eq(lessons.id, lessonId));
+
+      if (!current) return;
+      moduleId = current.module_id;
+
+      const neighborOrder = direction === 'up'
+        ? current.lesson_order - 1
+        : current.lesson_order + 1;
+
+      const [neighbor] = await tx
+        .select({ id: lessons.id, lesson_order: lessons.lesson_order })
+        .from(lessons)
+        .where(and(
+          eq(lessons.module_id, current.module_id),
+          eq(lessons.lesson_order, neighborOrder),
+        ));
+
+      if (!neighbor) return;
+
+      await tx.execute(sql`
+        UPDATE lessons
+        SET lesson_order = CASE
+          WHEN id = ${current.id}  THEN ${neighbor.lesson_order}
+          WHEN id = ${neighbor.id} THEN ${current.lesson_order}
+        END
+        WHERE id IN (${current.id}, ${neighbor.id})
+      `);
+
+      await auditLog.record({
+        actor:     user.id,
+        action:    'lesson_reordered',
+        target:    lessonId,
+        timestamp: new Date().toISOString(),
+        category:  'CONFIG',
+        tenantId:  user.tenantId,
+        metadata:  {
+          lesson_id:  lessonId,
+          title:      current.title,
+          direction,
+          from_order: current.lesson_order,
+          to_order:   neighbor.lesson_order,
+        },
+      });
+    });
+
+    if (moduleId) revalidatePath(`/admin/content/modules/${moduleId}`);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to reorder lesson' };
   }
 }

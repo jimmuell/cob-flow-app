@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
 import { ArchiveDialog } from './archive-dialog';
 import { publishCourse, archiveCourse } from '../actions/course';
+import { moveModule } from '../actions/module';
 
 interface ModuleRow {
   id: string;
@@ -28,6 +30,7 @@ interface CourseDetailClientProps {
   status: string;
   estimatedHours: number | null;
   unlockDefinition: UnlockItem[] | null;
+  sequenceId: string | null;
   sequenceName: string | null;
   createdAt: string;
   updatedAt: string;
@@ -52,14 +55,35 @@ export function CourseDetailClient({
   status,
   estimatedHours,
   unlockDefinition,
+  sequenceId,
   sequenceName,
   createdAt,
   updatedAt,
   modules,
 }: CourseDetailClientProps) {
+  const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isReordering, startReorder] = useTransition();
+  const [reorderError, setReorderError] = useState<string | null>(null);
+
+  const backHref = sequenceId
+    ? `/admin/content/sequences/${sequenceId}`
+    : '/admin/content?tab=courses';
+  const backLabel = sequenceName ? `← ${sequenceName}` : '← Content';
+
+  function handleMove(moduleId: string, direction: 'up' | 'down') {
+    setReorderError(null);
+    startReorder(async () => {
+      const result = await moveModule(moduleId, direction);
+      if (!result.ok) {
+        setReorderError((result as { ok: false; error: string }).error);
+      } else {
+        router.refresh();
+      }
+    });
+  }
 
   function handlePublish() {
     setPublishError(null);
@@ -71,6 +95,11 @@ export function CourseDetailClient({
 
   return (
     <div className="space-y-6">
+      {/* Back nav */}
+      <Link href={backHref} className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        {backLabel}
+      </Link>
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-1">
@@ -112,6 +141,9 @@ export function CourseDetailClient({
 
       {publishError && (
         <p className="text-sm text-destructive">{publishError}</p>
+      )}
+      {reorderError && (
+        <p className="text-sm text-destructive">{reorderError}</p>
       )}
 
       {/* Unlock grants */}
@@ -158,6 +190,20 @@ export function CourseDetailClient({
                   {mod.title}
                 </Link>
                 <StatusBadge status={mod.status} />
+                <div className="flex gap-1">
+                  <Button
+                    size="xs" variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    disabled={isReordering || idx === 0}
+                    onClick={() => handleMove(mod.id, 'up')}
+                  >↑</Button>
+                  <Button
+                    size="xs" variant="ghost"
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-slate-600"
+                    disabled={isReordering || idx === modules.length - 1}
+                    onClick={() => handleMove(mod.id, 'down')}
+                  >↓</Button>
+                </div>
               </div>
             ))}
           </div>

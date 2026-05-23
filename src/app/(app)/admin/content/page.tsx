@@ -3,7 +3,12 @@ import { courseSequences, courses, quizzes } from '@/lib/db/schema/content';
 import { eq, desc } from 'drizzle-orm';
 import { CatalogClient } from '@/features/content-manager/components/catalog-client';
 
-export default async function AdminContentPage() {
+export default async function AdminContentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
   const { sequences, courseList, quizList } = await withCurrentSession(async (tx) => {
     // Sequences: platform scope only
     const seqRows = await tx
@@ -73,6 +78,7 @@ export default async function AdminContentPage() {
       sequences={sequencesWithCount}
       courses={coursesForClient}
       quizzes={quizzesForClient}
+      defaultTab={tab}
     />
   );
 }

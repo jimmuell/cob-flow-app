@@ -72,6 +72,7 @@ export default async function CourseDetailPage({
       status={course.status}
       estimatedHours={course.estimatedHours ?? null}
       unlockDefinition={course.unlockDefinition as { unlock_type: string; unlock_value: number }[] | null}
+      sequenceId={course.sequenceId ?? null}
       sequenceName={seqRow?.name ?? null}
       createdAt={course.createdAt.toISOString()}
       updatedAt={course.updatedAt.toISOString()}

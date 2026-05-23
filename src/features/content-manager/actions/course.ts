@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/session';
 import { withCurrentSession } from '@/lib/db/client';
 import { courses } from '@/lib/db/schema/content';
@@ -206,6 +206,81 @@ export async function publishCourse(id: string): Promise<ActionResult> {
     return { ok: true, data: undefined };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Failed to publish course' };
+  }
+}
+
+export async function moveCourse(
+  courseId: string,
+  direction: 'up' | 'down',
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  const perm = canPerform({ user, action: 'UPDATE_COURSE' });
+  if (perm.decision === 'deny') return { ok: false, error: perm.reason };
+
+  try {
+    let sequenceId: string | null = null;
+
+    await withCurrentSession(async (tx) => {
+      const [current] = await tx
+        .select({
+          id:             courses.id,
+          sequence_order: courses.sequence_order,
+          sequence_id:    courses.sequence_id,
+          title:          courses.title,
+        })
+        .from(courses)
+        .where(eq(courses.id, courseId));
+
+      if (!current?.sequence_id || current.sequence_order == null) return;
+      sequenceId = current.sequence_id;
+
+      const neighborOrder = direction === 'up'
+        ? current.sequence_order - 1
+        : current.sequence_order + 1;
+
+      const [neighbor] = await tx
+        .select({ id: courses.id, sequence_order: courses.sequence_order })
+        .from(courses)
+        .where(and(
+          eq(courses.sequence_id, current.sequence_id),
+          eq(courses.sequence_order, neighborOrder),
+        ));
+
+      if (!neighbor) return;
+
+      await tx.execute(sql`
+        UPDATE courses
+        SET sequence_order = CASE
+          WHEN id = ${current.id}  THEN ${neighbor.sequence_order}
+          WHEN id = ${neighbor.id} THEN ${current.sequence_order}
+        END
+        WHERE id IN (${current.id}, ${neighbor.id})
+      `);
+
+      await auditLog.record({
+        actor:     user.id,
+        action:    'course_reordered',
+        target:    courseId,
+        timestamp: new Date().toISOString(),
+        category:  'CONFIG',
+        tenantId:  user.tenantId,
+        metadata:  {
+          course_id:  courseId,
+          title:      current.title,
+          direction,
+          from_order: current.sequence_order,
+          to_order:   neighbor.sequence_order,
+        },
+      });
+    });
+
+    revalidatePath('/admin/content');
+    if (sequenceId) revalidatePath(`/admin/content/sequences/${sequenceId}`);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to reorder course' };
   }
 }
 

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
+import Link from 'next/link';
 import { withCurrentSession } from '@/lib/db/client';
 import { modules } from '@/lib/db/schema/content';
 import { ModuleForm } from '@/features/content-manager/components/module-form';
@@ -32,6 +33,9 @@ export default async function EditModulePage({
 
   return (
     <div className="space-y-4">
+      <Link href={`/admin/content/modules/${mod.id}`} className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        ← {mod.title}
+      </Link>
       <h1 className="text-xl font-semibold text-slate-800">Edit Module</h1>
       <ModuleForm
         courseId={mod.courseId}

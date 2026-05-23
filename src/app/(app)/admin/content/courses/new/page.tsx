@@ -1,4 +1,5 @@
 import { eq, max } from 'drizzle-orm';
+import Link from 'next/link';
 import { withCurrentSession } from '@/lib/db/client';
 import { courseSequences, courses } from '@/lib/db/schema/content';
 import { CourseForm } from '@/features/content-manager/components/course-form';
@@ -32,8 +33,15 @@ export default async function NewCoursePage({
     return [seqs, defaults] as const;
   });
 
+  const backHref = params.sequence_id
+    ? `/admin/content/sequences/${params.sequence_id}`
+    : '/admin/content?tab=courses';
+
   return (
     <div className="space-y-4">
+      <Link href={backHref} className="inline-block text-xs text-slate-500 hover:text-slate-700">
+        ← {params.sequence_id ? 'Sequence' : 'Content'}
+      </Link>
       <h1 className="text-xl font-semibold text-slate-800">New Course</h1>
       <CourseForm sequences={sequences} defaultValues={defaultValues} />
     </div>
