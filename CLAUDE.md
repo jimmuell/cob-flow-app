@@ -69,9 +69,37 @@ Tenant context is always in the session, never passed as free-floating component
 - **`SENIOR_ANALYST` is not a Role.** Users are `role: "ANALYST"` + `level: "SENIOR"` in the fixtures and type system. The four-role model is canonical: `"ANALYST" | "SUPERVISOR" | "MANAGER" | "ADMIN"`.
 - **Roles helper is the only place for role checks.** No `user.role === "..."` string comparisons in components or pages.
 
-## Content-manager conventions
+## Accumulated conventions
 
-- **Slide image storage:** persist the Supabase Storage bucket path in the slide JSONB (`image_path` field). Sign at render time via `signSlideImagePath()` / `signSlideImageMap()` (`src/features/content-manager/lib/storage.ts`) with a 1-hour expiry. Never persist signed URLs.
+These patterns were established during CP1–CP6 of the Content Manager build (2026-05-22 → 2026-05-23). They apply across the codebase and must be honored by all future work unless a specific deviation is documented in a checkpoint.
+
+- **Zod schemas live OUTSIDE `'use server'` files.** Next.js disallows non-async exports from `'use server'` modules. Put schemas in `src/features/<feature>/schemas/` and import them into the action files. Surfaced CP4 commit `bc3f891`.
+
+- **Inside `withCurrentSession` transactions, use sequential `await`s — NOT `Promise.all`.** The `postgres` client deprecates concurrent queries on a single transaction connection. Surfaced CP4 commit `829b4ab`.
+
+- **Sanitize empty-string form inputs to null before validation** where the target column allows null. `react-hook-form` returns `""` for empty fields; Zod number coercion of `""` produces `NaN` which silently fails. Surfaced CP4 commit `a9d8a6d`; caught again as a CP4-era latent bug during CP6 work.
+
+- **Server-action canonical shape:** `getCurrentUser` → `canPerform` → schema validation via Zod `.safeParse` → `withCurrentSession` block (queries + `auditLog.record` inside the same transaction) → `revalidatePath` → return `ActionResult<T>` discriminated union. No deviations across CP4–CP6.
+
+- **Three-step swap for ordered-row reorder** under a unique constraint on (parent_id, order). Update current row to sentinel `-1`, update neighbor to current's order, update current to neighbor's old order. Each step satisfies the unique constraint individually rather than relying on end-of-statement deferral. Pattern lives in `actions/module.ts` `moveModule` and `actions/lesson.ts` `moveLesson`.
+
+- **Optimistic concurrency on quiz saves:** SELECT `updated_at` first; UPDATE with `WHERE updated_at = $last_known` in addition to the id match; if zero rows updated, return `{ ok: false, error: 'CONFLICT: ...' }`. Surfaced CP6. Propagate this pattern to other authoring saves (lesson, module, course, sequence) when those code paths are touched.
+
+- **Slide image storage:** persist storage paths in the slide JSONB `image_path` field (NOT signed URLs). At render time, server components call `signSlideImagePath(path)` from `src/features/content-manager/lib/storage.ts` to produce a 1-hour signed URL. This URL is NOT persisted. Local public-asset paths beginning with `/` are passed through unchanged. Pattern eliminates the persistent-signed-URL expiry concern.
+
+- **E2E auth sync barrier:** every Playwright test that signs in via the demo-account picker must `await expect(page).toHaveURL('/dashboard')` (or another deterministic post-auth URL assertion) before any subsequent `page.goto()`. Without the barrier, the test races against the auth cookie being set. Surfaced during CP5 smoke validation.
+
+- **Label-rename grep discipline:** when renaming any user-facing string, `grep tests/` for the old string before considering the rename complete. Surfaced when commit `8e1a3e3` (Sequence → Learning Path) shipped without test updates and broke three E2E tests on next run.
+
+- **Admin demo user canonical name is "A. Donnelly" (u_ad)**, not "S. Patel". Reconciled across TypeScript fixture, SQL seed migration, and docs at end of session 2026-05-23.
+
+- **Multi-commit per checkpoint, not one mega-commit.** The implementation plan's per-CP commit pattern is the target. CP5 shipped as a single commit (deviation); CP6 forward honored the pattern.
+
+- **Verification gate is non-negotiable:** typecheck + lint + build + Vitest unit + Playwright E2E + manual smoke in `npm run dev` before any push. CP5 skipped the dynamic portion and CP6 surfaced three test-staleness issues as a direct consequence. Static-only gate is insufficient.
+
+- **End-of-CP audit pass (recommended going forward):** at the end of each CP, spend ~10 minutes verifying spec/plan still match what was built. Fix drift in the same CP if found. The route-path drift hit at end of session 2026-05-23 (CP4 flattened the route layout but didn't back-propagate to spec/plan) cost ~30 minutes of remediation — would have been zero with an audit pass.
+
+- **Follow-the-spec-literally on type/shape directives.** When a spec says "mix of MC and FR" with required fields for FR, the spec means fill in the required FR fields — not default everything to MC because "I didn't want to leave FR fields blank." Surfaced during seed-script work end of session 2026-05-23.
 
 ## Locked decisions
 
