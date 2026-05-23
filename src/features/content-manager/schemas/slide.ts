@@ -10,7 +10,7 @@ const textSlideSchema = z.object({
 const imageSlideSchema = z.object({
   order:         z.number().int().min(1),
   type:          z.literal('image'),
-  image_url:     z.string(),
+  image_path:    z.string(),
   caption:       z.string(),
   body_markdown: z.string().optional(),
 });
@@ -18,7 +18,7 @@ const imageSlideSchema = z.object({
 const importedSlideSchema = z.object({
   order:       z.number().int().min(1),
   type:        z.literal('imported'),
-  image_url:   z.string(),
+  image_path:  z.string(),
   caption:     z.string(),
   source_pdf:  z.string().optional(),
   source_page: z.number().int().min(1).optional(),

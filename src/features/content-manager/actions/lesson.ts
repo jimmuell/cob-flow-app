@@ -232,7 +232,7 @@ export async function updateLessonSlides(
 export async function uploadSlideImage(
   lessonId: string,
   formData: FormData,
-): Promise<ActionResult<{ imageUrl: string }>> {
+): Promise<ActionResult<{ imagePath: string }>> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'Not authenticated' };
 
@@ -259,15 +259,24 @@ export async function uploadSlideImage(
 
     if (uploadError) return { ok: false, error: uploadError.message };
 
-    const { data: signed } = await supabase.storage
-      .from('content-assets')
-      .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
-
-    if (!signed?.signedUrl) return { ok: false, error: 'Failed to generate image URL' };
-
-    return { ok: true, data: { imageUrl: signed.signedUrl } };
+    return { ok: true, data: { imagePath: storagePath } };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Upload failed' };
+  }
+}
+
+export async function getSignedImageUrl(
+  path: string,
+): Promise<ActionResult<{ signedUrl: string }>> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: 'Not authenticated' };
+
+  try {
+    const { signSlideImagePath } = await import('../lib/storage');
+    const signedUrl = await signSlideImagePath(path);
+    return { ok: true, data: { signedUrl } };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Failed to sign URL' };
   }
 }
 
@@ -322,18 +331,10 @@ export async function importPdfSlides(
         .from('content-assets')
         .upload(storagePath, pageBuffer as Buffer, { contentType: 'image/png', upsert: false });
 
-      let imageUrl = '';
-      if (!uploadError) {
-        const { data: signed } = await supabase.storage
-          .from('content-assets')
-          .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
-        imageUrl = signed?.signedUrl ?? '';
-      }
-
       newSlides.push({
         order:       newSlides.length + 1,
         type:        'imported',
-        image_url:   imageUrl,
+        image_path:  uploadError ? '' : storagePath,
         caption:     `Imported page ${pageNum} of ${file.name}`,
         source_pdf:  file.name,
         source_page: pageNum,
