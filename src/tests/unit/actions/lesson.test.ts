@@ -188,7 +188,7 @@ describe('updateLessonSlides', () => {
   it('persists valid slides and writes audit event', async () => {
     const slides = [
       { order: 1, type: 'text', heading: 'Intro', body_markdown: 'Welcome' },
-      { order: 2, type: 'image', image_url: 'https://example.com/img.png', caption: 'Figure 1' },
+      { order: 2, type: 'image', image_path: 'course/mod/lesson/uuid.png', caption: 'Figure 1' },
     ];
 
     const result = await updateLessonSlides('lesson-001', slides);
