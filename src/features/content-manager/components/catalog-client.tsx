@@ -10,6 +10,7 @@ import {
   type ColumnDef,
 } from '@tanstack/react-table';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from './status-badge';
@@ -49,6 +50,7 @@ interface CatalogClientProps {
   courses: CourseRow[];
   quizzes: QuizRow[];
   defaultTab?: string;
+  statusFilter?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -186,10 +188,15 @@ const quizCols: ColumnDef<QuizRow>[] = [
 
 const VALID_TABS = ['sequences', 'courses', 'quizzes'] as const;
 
-export function CatalogClient({ sequences, courses, quizzes, defaultTab }: CatalogClientProps) {
+export function CatalogClient({ sequences, courses, quizzes, defaultTab, statusFilter = 'active' }: CatalogClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState(
     defaultTab && (VALID_TABS as readonly string[]).includes(defaultTab) ? defaultTab : 'sequences',
   );
+
+  function handleStatusChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    router.push(`/admin/content?tab=${activeTab}&status=${e.target.value}`);
+  }
 
   const newHref = activeTab === 'sequences'
     ? '/admin/content/sequences/new'
@@ -204,13 +211,27 @@ export function CatalogClient({ sequences, courses, quizzes, defaultTab }: Catal
           <h1 className="text-xl font-semibold text-slate-800">Content Catalog</h1>
           <p className="text-xs text-slate-500 mt-0.5">Platform-level content visible to all tenants.</p>
         </div>
-        {newHref && (
-          <Button asChild size="sm">
-            <Link href={newHref}>
-              {activeTab === 'sequences' ? '+ New Learning Path' : '+ New Course'}
-            </Link>
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1.5 text-xs text-slate-500">
+            Status:
+            <select
+              value={statusFilter}
+              onChange={handleStatusChange}
+              className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            >
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+              <option value="all">All</option>
+            </select>
+          </label>
+          {newHref && (
+            <Button asChild size="sm">
+              <Link href={newHref}>
+                {activeTab === 'sequences' ? '+ New Learning Path' : '+ New Course'}
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
