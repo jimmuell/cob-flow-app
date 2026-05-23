@@ -802,11 +802,10 @@ An unlock is soft-revoked by setting `revoked_at`, `revoked_by_user_id`, and `re
       modules/[moduleId]/               Module detail: lessons + quiz
         edit/                           Edit module metadata
         lessons/[lessonId]/             Lesson slide editor
-          edit/
         quiz/                           Module quiz editor
           new/
-          [quizId]/edit/
-      course-quizzes/[quizId]/edit/     Course-level quiz editor
+          [quizId]/
+      course-quizzes/[quizId]/          Course-level quiz editor
 
 /management/content/                    Management authoring root (Customer content)
   sequences/                            [mirrors /admin/content/sequences/ structure]
@@ -830,6 +829,8 @@ An unlock is soft-revoked by setting `revoked_at`, `revoked_by_user_id`, and `re
       [attemptId]/result/               FR result page (model answer + rubric + self-attest)
   history/                              All enrollments and completions for current user
 ```
+
+> **Note:** lesson, module-quiz, and course-quiz routes use `page.tsx` directly as the editor (no `/edit/` subroute). The CP4-era decision retained the `AdminDeleteSection` on the same page rather than splitting into a dedicated edit view. See CP4 commits for rationale.
 
 ### Admin Authoring Screens
 

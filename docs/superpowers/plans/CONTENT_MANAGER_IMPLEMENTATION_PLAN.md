@@ -440,9 +440,9 @@ CP3 complete. Session-aware DB client available. CM tables exist in local Postgr
    - `courses/[courseId]/edit/page.tsx` — Edit course metadata
    - `courses/[courseId]/modules/[moduleId]/page.tsx` — Module detail
    - `courses/[courseId]/modules/[moduleId]/edit/page.tsx` — Edit module metadata
-   - `courses/[courseId]/modules/[moduleId]/lessons/[lessonId]/edit/page.tsx` — Stub (CP5)
-   - `courses/[courseId]/modules/[moduleId]/quiz/[quizId]/edit/page.tsx` — Stub (CP6)
-   - `courses/[courseId]/course-quizzes/[quizId]/edit/page.tsx` — Stub (CP6)
+   - `modules/[moduleId]/lessons/[lessonId]/page.tsx` — Stub (CP5)
+   - `modules/[moduleId]/quizzes/[quizId]/page.tsx` — Stub (CP6)
+   - `courses/[courseId]/course-quizzes/[quizId]/page.tsx` — Stub (CP6)
 
 2. Add layout-level ADMIN role gate to `src/app/(app)/admin/content/layout.tsx`:
    ```typescript
@@ -535,6 +535,8 @@ CP5 fills the lesson slide editor stub. CP6 fills the quiz editor stub. CP7
 mirrors this entire route tree at `/management/content/` scoped to customer
 content. All audit wiring for authoring events is complete after CP4.
 
+**Implementation note (post-shipping):** route layout flattened per actual CP4 implementation. See spec §7 route map note.
+
 ---
 
 ### CP5 — Slide editor
@@ -615,10 +617,9 @@ as stubs.
    (`useMediaQuery` hook or a CSS `hidden` class on the editor + a visible
    fallback block).
 
-8. Replace the CP4 stub page at `courses/[courseId]/modules/[moduleId]/lessons/
-   [lessonId]/edit/page.tsx` with the real `SlideEditor` component. Pass course
-   slug, module slug, lesson slug, and content type as props derived from route
-   params and DB query.
+8. Replace the CP4 stub page at `modules/[moduleId]/lessons/[lessonId]/page.tsx`
+   with the real `SlideEditor` component. Pass course slug, module slug, lesson
+   slug, and content type as props derived from route params and DB query.
 
 #### Acceptance Criteria
 
@@ -716,8 +717,8 @@ editor routes exist as stubs from CP4.
    or `quiz_created` (category `CONFIG`) as appropriate. Use optimistic concurrency
    (`updated_at` check).
 
-8. Replace CP4 stub pages at `modules/[moduleId]/quiz/[quizId]/edit/` and
-   `course-quizzes/[quizId]/edit/` with `QuizEditor`.
+8. Replace CP4 stub pages at `modules/[moduleId]/quizzes/[quizId]/page.tsx` and
+   `courses/[courseId]/course-quizzes/[quizId]/page.tsx` with `QuizEditor`.
 
 #### Acceptance Criteria
 
