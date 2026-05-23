@@ -11,8 +11,9 @@ export default async function ModuleDetailPage({
 }) {
   const { moduleId } = await params;
 
-  const data = await withCurrentSession(async (tx) => {
-    const [mod] = await tx
+  // Phase 1: load the module record (lessonRows/quizRows/courseRow all depend on it)
+  const mod = await withCurrentSession((tx) =>
+    tx
       .select({
         id:          modules.id,
         title:       modules.title,
@@ -24,11 +25,17 @@ export default async function ModuleDetailPage({
         updatedAt:   modules.updated_at,
       })
       .from(modules)
-      .where(eq(modules.id, moduleId));
+      .where(eq(modules.id, moduleId))
+      .then((rows) => rows[0] ?? null),
+  );
 
-    if (!mod) return null;
+  if (!mod) notFound();
 
-    const [lessonRows, quizRows, courseRow] = await Promise.all([
+  // Phase 2: three independent reads — each gets its own pg client via a fresh
+  // withCurrentSession call, so they can safely run in parallel via Promise.all.
+  const courseId = mod.courseId;
+  const [lessonRows, quizRows, courseRow] = await Promise.all([
+    withCurrentSession((tx) =>
       tx
         .select({
           id:          lessons.id,
@@ -39,7 +46,8 @@ export default async function ModuleDetailPage({
         .from(lessons)
         .where(eq(lessons.module_id, moduleId))
         .orderBy(asc(lessons.lesson_order)),
-
+    ),
+    withCurrentSession((tx) =>
       tx
         .select({
           id:       quizzes.id,
@@ -48,20 +56,15 @@ export default async function ModuleDetailPage({
         })
         .from(quizzes)
         .where(eq(quizzes.module_id, moduleId)),
-
+    ),
+    withCurrentSession((tx) =>
       tx
         .select({ id: courses.id, title: courses.title })
         .from(courses)
-        .where(eq(courses.id, mod.courseId))
+        .where(eq(courses.id, courseId))
         .then((rows) => rows[0] ?? null),
-    ]);
-
-    return { mod, lessonRows, quizRows, courseRow };
-  });
-
-  if (!data) notFound();
-
-  const { mod, lessonRows, quizRows, courseRow } = data;
+    ),
+  ]);
 
   return (
     <ModuleDetailClient

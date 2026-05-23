@@ -11,8 +11,9 @@ export default async function CourseDetailPage({
 }) {
   const { courseId } = await params;
 
-  const data = await withCurrentSession(async (tx) => {
-    const [course] = await tx
+  // Phase 1: load the course record (moduleRows/seqRow both depend on it)
+  const course = await withCurrentSession((tx) =>
+    tx
       .select({
         id:               courses.id,
         title:            courses.title,
@@ -27,11 +28,18 @@ export default async function CourseDetailPage({
         updatedAt:        courses.updated_at,
       })
       .from(courses)
-      .where(eq(courses.id, courseId));
+      .where(eq(courses.id, courseId))
+      .then((rows) => rows[0] ?? null),
+  );
 
-    if (!course) return null;
+  if (!course) notFound();
 
-    const [moduleRows, seqRow] = await Promise.all([
+  // Phase 2: two independent reads — each gets its own pg client via a fresh
+  // withCurrentSession call, so they can safely run in parallel via Promise.all.
+  // seqId captured as a local const so TypeScript narrows it to string in the callback.
+  const seqId = course.sequenceId;
+  const [moduleRows, seqRow] = await Promise.all([
+    withCurrentSession((tx) =>
       tx
         .select({
           id:          modules.id,
@@ -42,22 +50,17 @@ export default async function CourseDetailPage({
         .from(modules)
         .where(eq(modules.course_id, courseId))
         .orderBy(asc(modules.module_order)),
-
-      course.sequenceId
-        ? tx
+    ),
+    seqId
+      ? withCurrentSession((tx) =>
+          tx
             .select({ name: courseSequences.name })
             .from(courseSequences)
-            .where(eq(courseSequences.id, course.sequenceId))
-            .then((rows) => rows[0] ?? null)
-        : Promise.resolve(null),
-    ]);
-
-    return { course, moduleRows, seqRow };
-  });
-
-  if (!data) notFound();
-
-  const { course, moduleRows, seqRow } = data;
+            .where(eq(courseSequences.id, seqId))
+            .then((rows) => rows[0] ?? null),
+        )
+      : Promise.resolve(null),
+  ]);
 
   return (
     <CourseDetailClient
