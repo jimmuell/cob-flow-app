@@ -509,7 +509,7 @@ CP3 complete. Session-aware DB client available. CM tables exist in local Postgr
 
 ```bash
 npm run dev
-# Manual: sign in as Admin (S. Patel demo account), navigate /admin/content/
+# Manual: sign in as Admin (A. Donnelly demo account), navigate /admin/content/
 # Manual: create a sequence, publish it, archive it (with justification)
 # Manual: sign in as Analyst, attempt /admin/content/ — expect redirect to /dashboard
 npm run typecheck

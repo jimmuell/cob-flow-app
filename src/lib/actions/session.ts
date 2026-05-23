@@ -6,8 +6,8 @@ import { revalidatePath } from "next/cache";
 const ROLE_CYCLE: Record<string, string> = {
   u_jm: "u_tr",  // J. Mueller (ANALYST)    → T. Ramos (SUPERVISOR)
   u_tr: "u_db",  // T. Ramos (SUPERVISOR)   → D. Berger (MANAGER)
-  u_db: "u_ad",  // D. Berger (MANAGER)     → S. Patel (ADMIN)
-  u_ad: "u_jm",  // S. Patel (ADMIN)        → J. Mueller (ANALYST)
+  u_db: "u_ad",  // D. Berger (MANAGER)     → A. Donnelly (ADMIN)
+  u_ad: "u_jm",  // A. Donnelly (ADMIN)     → J. Mueller (ANALYST)
 };
 
 export async function setRoleToggleAction(): Promise<void> {

@@ -64,7 +64,7 @@ test.describe("Phase B: Auth + App Shell", () => {
     await expect(page.getByTitle(/Toggle demo role/)).toContainText("Manager");
     await expect(page.getByRole("link", { name: "Management" })).toBeVisible();
 
-    // → Admin (S. Patel): Management gone, Admin appears
+    // → Admin (A. Donnelly): Management gone, Admin appears
     await page.getByTitle(/Toggle demo role/).click();
     await expect(page.getByTitle(/Toggle demo role/)).toContainText("Admin");
     await expect(page.getByRole("link", { name: "Admin" })).toBeVisible();

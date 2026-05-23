@@ -507,8 +507,8 @@ import { revalidatePath } from "next/cache";
 const ROLE_CYCLE: Record<string, string> = {
   u_jm: "u_tr",  // J. Mueller (ANALYST) → T. Ramos (SUPERVISOR)
   u_tr: "u_db",  // T. Ramos (SUPERVISOR) → D. Berger (MANAGER)
-  u_db: "u_ad",  // D. Berger (MANAGER)    → S. Patel (ADMIN)
-  u_ad: "u_jm",  // S. Patel (ADMIN)       → J. Mueller (ANALYST)
+  u_db: "u_ad",  // D. Berger (MANAGER)    → A. Donnelly (ADMIN)
+  u_ad: "u_jm",  // A. Donnelly (ADMIN)    → J. Mueller (ANALYST)
 };
 
 export async function setRoleToggleAction(): Promise<void> {
@@ -1537,7 +1537,7 @@ npm run dev
 3. Open the account menu — confirm name, role chip, version line, and sign-out button.
 4. Click "Sign out" — should return to `/signin`.
 5. Sign in as T. Ramos (Supervisor) — confirm Management nav items appear.
-6. Sign in as S. Patel (Admin) — confirm Admin nav item appears; Management does not.
+6. Sign in as A. Donnelly (Admin) — confirm Admin nav item appears; Management does not.
 7. Sign in as J. Mueller (Analyst) — confirm neither Management nor Admin appears.
 8. Sign in as J. Mueller, then click the role toggle button — confirm role cycles through all four roles and the sidebar adjusts.
 
@@ -1728,7 +1728,7 @@ test.describe("Phase B: Auth + App Shell", () => {
     await expect(page).toHaveURL("/signin");
   });
 
-  test("role toggle cycles J. Mueller → T. Ramos → D. Berger → S. Patel → J. Mueller", async ({ page }) => {
+  test("role toggle cycles J. Mueller → T. Ramos → D. Berger → A. Donnelly → J. Mueller", async ({ page }) => {
     await page.goto("/signin");
     await page.getByRole("button", { name: /J\. Mueller/ }).click();
     await expect(page).toHaveURL("/dashboard");
@@ -1747,7 +1747,7 @@ test.describe("Phase B: Auth + App Shell", () => {
     await expect(page.getByText("Manager")).toBeVisible();
     await expect(page.getByRole("link", { name: "Management" })).toBeVisible();
 
-    // Toggle → Admin (S. Patel) — Management gone, Admin appears
+    // Toggle → Admin (A. Donnelly) — Management gone, Admin appears
     await page.getByTitle(/Toggle demo role/).click();
     await expect(page.getByText("Admin")).toBeVisible();
     await expect(page.getByRole("link", { name: "Admin" })).toBeVisible();
@@ -1853,7 +1853,7 @@ From spec §17:
 - [ ] Sign-in via email form works (any non-empty password) for all 9 seeded users
 - [ ] Sign-in via demo accounts panel works for all 9 seeded users without typing
 - [ ] Sign-out from account menu clears session and returns to `/signin`
-- [ ] Role toggle cycles J. Mueller → T. Ramos → D. Berger → S. Patel → J. Mueller
+- [ ] Role toggle cycles J. Mueller → T. Ramos → D. Berger → A. Donnelly → J. Mueller
 - [ ] After role toggle, sidebar nav adjusts: Management appears for SUPERVISOR/MANAGER, disappears for ANALYST/ADMIN; Admin appears for ADMIN only
 - [ ] Tenant dropdown updates the customer-mode info box in the sidebar
 - [ ] Mobile sidebar sheet opens on hamburger tap, closes on backdrop click, hidden on `md:` and above (resize browser to < 768px)

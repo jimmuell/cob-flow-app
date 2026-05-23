@@ -133,7 +133,7 @@ Role-toggle cycle — keyed on user ID, anchored to Team A's demo roster:
 | `u_jm` (J. Mueller) | `u_tr` | SUPERVISOR |
 | `u_tr` (T. Ramos) | `u_db` | MANAGER |
 | `u_db` (D. Berger) | `u_ad` | ADMIN |
-| `u_ad` (S. Patel) | `u_jm` | ANALYST |
+| `u_ad` (A. Donnelly) | `u_jm` | ANALYST |
 | _(any other)_ | `u_jm` | ANALYST |
 
 Reads `cob_user_id` cookie, maps to next user ID, writes cookie, calls `revalidatePath('/', 'layout')`. No return value. No `router.refresh()` in the client.
@@ -393,7 +393,7 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
 - [ ] Sign-in via email form works (any non-empty password) for all 9 seeded users
 - [ ] Sign-in via demo accounts panel works for all 9 seeded users without typing
 - [ ] Sign-out from account menu clears session and returns to `/signin` — **must be covered by a CP4 E2E test** (unit tests cover the Server Action in isolation; the Radix DropdownMenu click→submit path requires Playwright to verify end-to-end)
-- [ ] Role toggle cycles J. Mueller → T. Ramos → D. Berger → S. Patel → J. Mueller
+- [ ] Role toggle cycles J. Mueller → T. Ramos → D. Berger → A. Donnelly → J. Mueller
 - [ ] After role toggle, sidebar nav adjusts: Management appears for SUPERVISOR/MANAGER, disappears for ANALYST/ADMIN; Admin appears for ADMIN only
 - [ ] Tenant dropdown updates the customer-mode info box in the sidebar
 - [ ] Mobile sidebar sheet opens on hamburger tap, closes on backdrop click, hidden on `md:` and above

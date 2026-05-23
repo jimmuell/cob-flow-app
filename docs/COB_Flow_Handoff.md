@@ -103,7 +103,7 @@ Memory files live at `/Users/jameslmueller/Library/Application Support/Claude/lo
 - *Analysts* (with Job Levels): J. Mueller (Senior), K. Nguyen / M. Lindgren / D. Pemberton (Mid), A. Whitfield (Junior)
 - *Supervisors*: T. Ramos (Team A), S. Bergstrom (Team B)
 - *Manager*: D. Berger
-- *Admin*: S. Patel
+- *Admin*: A. Donnelly
 
 **Two teams:** Team A (T. Ramos supervises J. Mueller, K. Nguyen, A. Whitfield), Team B (S. Bergstrom supervises M. Lindgren, D. Pemberton). Both roll up to D. Berger.
 
