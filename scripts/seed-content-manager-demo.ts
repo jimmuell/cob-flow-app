@@ -657,62 +657,29 @@ const curriculum = [
     ],
     capstoneQuiz: {
       title: 'Capstone Quiz: Payer Identification & Ordering',
+      quiz_type: 'free_response' as const,
       questions: [
         {
           question_order: 1,
-          question_type: 'multiple_choice' as const,
-          topic: 'ERISA and state law',
-          stem_markdown: 'A Wisconsin resident is covered by both her employer\'s ERISA self-funded health plan and her spouse\'s fully-insured commercial plan. She is injured in an auto accident. The ERISA plan has a subrogation clause. Which law governs the subrogation right?',
-          mc_options: [
-            'Wisconsin state insurance law',
-            'Federal ERISA law — it preempts Wisconsin insurance regulations for self-funded plans',
-            'Both ERISA and Wisconsin law apply equally',
-            'Neither — subrogation rights are governed by contract only, not by statute',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'ERISA\'s preemption clause exempts self-funded employer plans from state insurance regulation. The ERISA plan\'s subrogation rights are governed by federal law, not Wisconsin Ins 3.40.',
+          question_type: 'free_response' as const,
+          topic: 'Made-whole analysis in a fully-insured plan',
+          stem_markdown: 'A Wisconsin resident is injured in a car accident caused by another driver. She has commercial health insurance through her employer (fully insured, Wisconsin-licensed PPO). The at-fault driver carries $100,000 in BI liability coverage. The health plan paid $40,000 in medical bills. The member\'s PI attorney negotiates a $75,000 settlement from the at-fault driver\'s insurer and asserts — citing the Wisconsin made-whole doctrine — that his client has not been fully compensated for all losses and therefore the plan\'s subrogation lien is not yet enforceable.\n\nWalk through the analytical sequence the COB analyst should follow before responding to the attorney\'s demand.',
+          fr_model_answer_markdown: 'The first step is to confirm the plan\'s classification: this is a Wisconsin-licensed fully-insured commercial plan, not an ERISA self-funded plan. That classification is determinative — because the plan is state-regulated, Wisconsin\'s made-whole doctrine applies. Under the doctrine (articulated in Wisconsin common law and recognized in *Ruckel v. Gassner*), the insurer\'s subrogation right is subordinate until the insured has been fully compensated for all losses.\n\nThe analyst must then estimate the member\'s total damages: economic damages (medical bills, lost wages, rehabilitation costs) plus non-economic damages (pain and suffering, loss of consortium). If total damages exceed the $75,000 settlement recovery, the member is not made whole and the plan\'s lien cannot be enforced in full. For example, if total damages are $120,000, the made-whole shortfall is $45,000, and the plan\'s equitable recovery is limited to: (Plan payment / Total damages) × Settlement = ($40,000 / $120,000) × $75,000 = $25,000.\n\nIf total damages are less than or equal to $75,000, the member is made whole and the plan can demand full reimbursement (subject to the common-fund doctrine requiring a pro-rata attorney fee contribution).\n\nThe analyst must document the damages estimate methodology, the made-whole determination, and the calculated recovery in the audit log with a justification entry. If the calculated recovery differs from the plan\'s full $40,000 demand by more than the analyst\'s lien-reduction authority band, the analyst must escalate to a supervisor or manager before responding to the attorney.',
+          fr_grading_rubric_markdown: '- **Plan classification**: correctly identifies that the Wisconsin-licensed fully-insured plan is subject to state law and therefore the made-whole doctrine applies (distinguish from ERISA self-funded plans, which can contractually override it)\n- **Made-whole calculation**: describes the method for determining whether the member is made whole — compare total damages to total recovery — and applies the pro-rata formula if the member is not made whole\n- **Documentation and escalation**: identifies the audit log justification requirement and the authority-band escalation trigger if the calculated recovery falls outside the analyst\'s lien-reduction ceiling',
+          mc_options: null,
+          mc_correct_option: null,
+          mc_explanation_markdown: null,
         },
         {
           question_order: 2,
-          question_type: 'multiple_choice' as const,
-          topic: 'Birthday rule',
-          stem_markdown: 'A dependent child is covered under both parents\' employer plans. Parent A\'s birthday is February 14; Parent B\'s birthday is September 3. Both parents have active employer coverage. Which plan is primary for the child?',
-          mc_options: [
-            'Parent B\'s plan — September is later in the year',
-            'Parent A\'s plan — February birthday is earlier in the calendar year',
-            'The plan with the higher annual benefit limit',
-            'The plan that has been in force longer',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'The birthday rule: parent with the earlier birthday (month and day) has the primary plan. February 14 < September 3, so Parent A\'s plan is primary.',
-        },
-        {
-          question_order: 3,
-          question_type: 'multiple_choice' as const,
-          topic: 'Payer ordering',
-          stem_markdown: 'An analyst is ordering payers for a Wisconsin Auto COB case: (1) member\'s employer ERISA health plan, (2) member\'s auto med-pay coverage ($5,000), (3) Medicare (member is 66). What is the likely order from primary to tertiary?',
-          mc_options: [
-            'Medicare → auto med-pay → health plan',
-            'Auto med-pay → health plan → Medicare',
-            'Health plan → auto med-pay → Medicare',
-            'Medicare → health plan → auto med-pay',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'Auto med-pay (no-fault) is primary. The ERISA health plan is secondary once med-pay is exhausted. Medicare is payer of last resort under MSP rules when other coverage is available.',
-        },
-        {
-          question_order: 4,
-          question_type: 'multiple_choice' as const,
-          topic: 'Non-duplication clause',
-          stem_markdown: 'An auto med-pay policy has a "non-duplication" clause and the member also has a health plan. The health plan pays $3,000. The auto insurer receives the claim. Under the non-duplication clause, the auto insurer:',
-          mc_options: [
-            'Pays $3,000 in addition to the health plan payment',
-            'Does not pay for the $3,000 already covered by the health plan',
-            'Demands the health plan reimburse the $3,000',
-            'Voids the member\'s coverage for this accident',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'A non-duplication clause prevents the auto insurer from paying amounts already reimbursed by another carrier. This can create a gap if the health plan and auto insurer both expect the other to pay first.',
+          question_type: 'free_response' as const,
+          topic: 'ERISA preemption pivot',
+          stem_markdown: 'Take the same fact pattern from Q1 — Wisconsin auto accident, $40,000 in plan payments, $75,000 settlement from the at-fault driver — but the health plan is now **self-funded under ERISA**. The Summary Plan Description (SPD) includes the following language: *"The plan\'s subrogation and reimbursement rights are not subject to the made-whole doctrine, the common-fund doctrine, or any similar equitable limitation imposed by state law."*\n\nHow does the analysis change? Identify each step in the workflow that produces a different result or requires a different action, and explain why.',
+          fr_model_answer_markdown: 'The pivot at step one is decisive: the plan is ERISA self-funded, not state-regulated. Under 29 U.S.C. § 1144, ERISA preempts state laws that "relate to" employee benefit plans. Wisconsin\'s made-whole doctrine is a state common-law rule governing insurance contracts; under ERISA preemption, it does not apply to self-funded plans. *Sereboff v. Mid Atlantic Medical Services* (2006) confirmed that ERISA plans may enforce equitable reimbursement liens against specifically identified funds — the settlement proceeds — in the member\'s possession.\n\nBecause the SPD includes explicit anti-made-whole and anti-common-fund language, the plan is not even contractually bound by those doctrines in equity. The workflow differences are concrete:\n\n1. **Made-whole analysis is bypassed.** The analyst does not estimate total damages or calculate the pro-rata formula. The plan may demand its full $40,000 regardless of whether the $75,000 settlement leaves the member under-compensated.\n2. **SPD language review replaces doctrine analysis.** The analyst must locate and cite the specific SPD anti-limitation clause in the audit log. If the SPD were silent on those doctrines, equitable principles could still apply under *Sereboff*, so the exact SPD language matters.\n3. **Common-fund doctrine is also inapplicable per the SPD.** Under a state-regulated plan the analyst would calculate the plan\'s pro-rata attorney fee obligation. Here, the SPD explicitly disclaims the common-fund doctrine, so the plan can demand the full $40,000 without contributing to the member\'s attorney fees.\n4. **Audit log entry changes.** Instead of a made-whole justification, the log entry must document: ERISA self-funded classification, SPD clause citation, and the basis for asserting the full $40,000 demand.\n\nThe dollar outcome is materially different: ERISA plan recovers $40,000; a state-regulated plan in the same facts might be limited to $25,000 or less.',
+          fr_grading_rubric_markdown: '- **ERISA preemption mechanics**: correctly identifies that ERISA preempts Wisconsin\'s made-whole doctrine for self-funded plans, and cites the preemption clause and *Sereboff* as the controlling authority\n- **Workflow diff**: enumerates at least three concrete steps that produce a different result under ERISA vs. state law (made-whole bypass, SPD language review, common-fund disclaimer effect, audit log content)\n- **SPD language significance**: explains why the specific anti-limitation language in the SPD matters and what the result would be if the SPD were silent on those doctrines',
+          mc_options: null,
+          mc_correct_option: null,
+          mc_explanation_markdown: null,
         },
       ],
     },
@@ -1313,62 +1280,29 @@ const curriculum = [
     ],
     capstoneQuiz: {
       title: 'Capstone Quiz: Recovery Workflows & Documentation',
+      quiz_type: 'free_response' as const,
       questions: [
         {
           question_order: 1,
-          question_type: 'multiple_choice' as const,
-          topic: 'Authority escalation',
-          stem_markdown: 'An analyst has a $50,000 settlement authority ceiling. A subrogation case is valued at $75,000 and a settlement offer of $70,000 has been received. The analyst should:',
-          mc_options: [
-            'Reject the settlement because it exceeds the analyst\'s ceiling',
-            'Escalate the settlement decision to a supervisor or manager with a higher authority ceiling',
-            'Counter-offer at $50,000 without escalating',
-            'Accept the settlement because it is within 10% of the analyst\'s ceiling',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'The $70,000 settlement exceeds the analyst\'s $50,000 ceiling. Authority ceilings exist precisely for situations like this — the analyst must escalate, not act unilaterally.',
+          question_type: 'free_response' as const,
+          topic: 'Pre-closure file review',
+          stem_markdown: 'An auto claim file has been open for 18 months. The assigned analyst recommends closure with no recovery. Before flagging the file for closure, the SPD review template surfaced two facts: (1) the health plan was amended twice during the file\'s life — once at month 3 and once at month 11; and (2) the audit log shows two correspondence overrides entered by a supervisor, both during month 7.\n\nWalk through every records-verification and authority-confirmation step a Junior-level analyst must complete before recommending closure, and identify what an Admin must independently verify before approving the close.',
+          fr_model_answer_markdown: 'A Junior-level analyst must work through four verification tracks before a no-recovery closure recommendation can stand.\n\n**1. SPD amendment timing.** The governing plan language for any subrogation claim is the SPD in effect on the date of loss, not the current SPD. The analyst must confirm that both amendments post-date the accident. If either amendment was effective before the date of loss, the analyst must re-run the subrogation and made-whole analysis under the earlier SPD version. If an amendment narrowed subrogation rights and was effective before the accident, the original analysis may have used incorrect authority.\n\n**2. Correspondence override justification.** Each supervisor override in the audit log must have a `justification` field entry explaining the basis and citing the supervisor\'s authority. The analyst reviews both override entries to confirm: (a) the supervisor\'s canPerform ceiling covered the override action; (b) the justification entry is present and complete; (c) the override did not commit the plan to a position inconsistent with a no-recovery close (e.g., a prior settlement offer that was never withdrawn).\n\n**3. No-recovery rationale.** The analyst must document affirmatively why no recovery is possible or warranted: at-fault driver uninsured or underinsured beyond the plan\'s recovery cost threshold, member found ≥51% at fault under Wis. Stat. § 895.045 (barring any recovery), statute of limitations elapsed, or an approved lien reduction reducing the balance to zero. The rationale must appear in the audit log with a justification entry before the close request is submitted.\n\n**4. Analyst closure authority.** A no-recovery closure is a closure action. The analyst must confirm their closure authority ceiling covers a $0-recovery close. If the original demand exceeded their ceiling at any point, the close may require the same approval level that authorized the demand.\n\n**Admin verification.** Before approving, an Admin must confirm: (a) the audit log shows a complete unbroken chain of custody with no unexplained gaps; (b) all supervisor overrides have compliant justification entries; (c) no open appeals, grievances, or member disputes reference this file; (d) the SPD amendment analysis is documented and reaches a supportable conclusion.',
+          fr_grading_rubric_markdown: '- **SPD amendment analysis**: correctly identifies that the governing SPD is the version in effect on the date of loss, and describes the re-analysis step required if an amendment pre-dates the accident\n- **Override and authority chain**: describes verifying each correspondence override for supervisor authority ceiling compliance and justification-entry completeness, and explains that an uncommitted override position could block a no-recovery close\n- **Admin gate**: enumerates the Admin\'s independent verification responsibilities (audit log completeness, open disputes, SPD conclusion documentation) as distinct from the analyst\'s own checklist',
+          mc_options: null,
+          mc_correct_option: null,
+          mc_explanation_markdown: null,
         },
         {
           question_order: 2,
-          question_type: 'multiple_choice' as const,
-          topic: 'Lien reduction trigger',
-          stem_markdown: 'Which event in the recovery cycle most commonly triggers a lien reduction discussion?',
-          mc_options: [
-            'The member files a new claim for a different accident',
-            'The at-fault driver was underinsured and the member\'s total recovery is limited',
-            'The health plan discovers the claim was processed out of network',
-            'The member\'s employer changes health plans mid-recovery',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'When the at-fault party\'s coverage is insufficient to make the member whole, requiring full subrogation reimbursement from the limited recovery is inequitable. That is the trigger for a lien reduction discussion.',
-        },
-        {
-          question_order: 3,
-          question_type: 'multiple_choice' as const,
-          topic: 'Audit documentation',
-          stem_markdown: 'For audit readiness when closing an Auto COB recovery file, which documentation element is most critical?',
-          mc_options: [
-            'A copy of the member\'s health insurance ID card',
-            'The primacy determination rationale and evidence that coverage was verified',
-            'The original billing codes from the treating provider',
-            'Copies of all emails between the analyst and the member\'s attorney',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'The primacy rationale and coverage verification evidence are the core of an audit-ready file. They demonstrate that the correct determination was made on the correct legal basis.',
-        },
-        {
-          question_order: 4,
-          question_type: 'multiple_choice' as const,
-          topic: 'Closure authority',
-          stem_markdown: '"Closure authority" in the COB Flow authority framework means:',
-          mc_options: [
-            'The right to close a claim with zero payment',
-            'The authority to close a recovery file — including accepting a settlement or writing off a balance',
-            'The authority to terminate a member\'s enrollment in the health plan',
-            'The right to close a subrogation file without notifying the supervisor',
-          ],
-          mc_correct_option: 'b' as const,
-          mc_explanation_markdown: 'Closure authority governs the finalization of a recovery file. It covers settlements at or below the demand, write-offs, and case closures. Each action requires authority at the appropriate level.',
+          question_type: 'free_response' as const,
+          topic: 'Authority-gap handling',
+          stem_markdown: 'A Junior-level analyst is working a subrogation recovery file. The at-fault driver\'s liability insurer extends a $40,000 settlement offer with a 10-business-day response window. The analyst\'s settlement authority ceiling is $25,000. The analyst\'s assigned Supervisor is out of office for the full week and has not designated an acting supervisor.\n\nWalk through every audit-clean path available to this analyst. For each path, identify which step is a `canPerform` check, which requires a manager-grant escalation, and what the analyst must NOT do.',
+          fr_model_answer_markdown: 'The analyst\'s first action is a `canPerform` check with the settlement action and amount. `canPerform` will return `{ decision: "requires_approval", approverRole: "SUPERVISOR", queueType: "settlement_approval" }` because the $40,000 offer exceeds the analyst\'s $25,000 ceiling. This is the system\'s signal that unilateral action is not authorized.\n\n**Path 1 — Escalate directly to manager.** Because the assigned supervisor is unavailable and has not designated an acting supervisor, the escalation path moves up the authority chain to the manager. The analyst submits a manager-grant escalation request in COB Flow, attaching the settlement offer, the file summary, and the response deadline. The manager\'s authority ceiling ($100,000 platform ceiling for settlement) covers this offer. The manager reviews and, if approving, logs the decision in the audit log with their own justification entry. `canPerform` is re-evaluated with the manager as the acting approver.\n\n**Path 2 — Request a deadline extension.** If the manager cannot respond before the offer expires, the analyst\'s next action is to contact opposing counsel to request a deadline extension. This is a correspondence action within the analyst\'s authority (correspondence does not require approval). The analyst logs the extension request and the response in the audit log.\n\n**Path 3 — Decline and counter within analyst ceiling.** If the analyst\'s analysis supports a counter at or below $25,000, they may counter unilaterally within their ceiling. However, the analyst must be confident this counter is in the plan\'s interest and must document the counter rationale. A counter that forfeits a clearly favorable offer above the analyst\'s ceiling without escalating would be an improper unilateral action.\n\n**What the analyst must NOT do:** (1) Accept the $40,000 offer without manager approval — this is an unauthorized settlement action and an audit violation; (2) Log a "tentative acceptance" or any language that could bind the plan to the offer; (3) Allow the offer to expire without logging a reason and escalating — silent expiration with no audit log entry is a recordkeeping violation.\n\nIn all paths, every action and non-action must have an audit log entry with a justification entry explaining the authority basis.',
+          fr_grading_rubric_markdown: '- **canPerform mechanics**: correctly describes the canPerform check and its output (requires_approval, approverRole, queueType), and identifies the manager as the correct escalation target when the supervisor is unavailable without a designated acting supervisor\n- **Deadline management**: identifies the correspondence-level deadline extension request as an available action within the analyst\'s authority, and explains why it is necessary if the approval path cannot complete before expiry\n- **Prohibited actions**: explicitly identifies accepting the offer or logging any commitment without manager approval as an audit violation, and states that silent expiration without a log entry is also a recordkeeping violation',
+          mc_options: null,
+          mc_correct_option: null,
+          mc_explanation_markdown: null,
         },
       ],
     },
@@ -1564,6 +1498,7 @@ async function main() {
       }
 
       // course capstone quiz
+      const capQuizType = (capstoneQuiz as { quiz_type?: string }).quiz_type ?? 'multiple_choice';
       const [capQuiz] = await db
         .insert(quizzes)
         .values({
@@ -1571,22 +1506,25 @@ async function main() {
           course_id:      course.id,
           title:          capstoneQuiz.title,
           pass_threshold: 80,
-          quiz_type:      'multiple_choice',
+          quiz_type:      capQuizType,
           status:         'draft',
         })
         .returning({ id: quizzes.id });
       totalQuizzes++;
 
       for (const q of capstoneQuiz.questions) {
+        const qAny = q as Record<string, unknown>;
         await db.insert(quizQuestions).values({
-          quiz_id:              capQuiz.id,
-          question_order:       q.question_order,
-          question_type:        q.question_type,
-          topic:                q.topic,
-          stem_markdown:        q.stem_markdown,
-          mc_options:           q.mc_options as unknown as Record<string, unknown>,
-          mc_correct_option:    q.mc_correct_option,
-          mc_explanation_markdown: q.mc_explanation_markdown,
+          quiz_id:                    capQuiz.id,
+          question_order:             q.question_order,
+          question_type:              q.question_type,
+          topic:                      q.topic,
+          stem_markdown:              q.stem_markdown,
+          mc_options:                 (qAny.mc_options ?? null) as unknown as Record<string, unknown> | null,
+          mc_correct_option:          (qAny.mc_correct_option ?? null) as string | null,
+          mc_explanation_markdown:    (qAny.mc_explanation_markdown ?? null) as string | null,
+          fr_model_answer_markdown:   (qAny.fr_model_answer_markdown ?? null) as string | null,
+          fr_grading_rubric_markdown: (qAny.fr_grading_rubric_markdown ?? null) as string | null,
         });
         totalQuestions++;
       }
