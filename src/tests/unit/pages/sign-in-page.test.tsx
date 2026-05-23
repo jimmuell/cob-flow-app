@@ -54,7 +54,7 @@ describe("SignInPage — error display (CP2 coverage)", () => {
     render(element);
     expect(screen.getByText("Demo accounts")).toBeInTheDocument();
     expect(screen.getByText("J. Mueller")).toBeInTheDocument();
-    expect(screen.getByText("S. Patel")).toBeInTheDocument();
+    expect(screen.getByText("A. Donnelly")).toBeInTheDocument();
     // 9 hidden userId inputs = 9 demo users
     const hiddenInputs = document.querySelectorAll('input[name="userId"]');
     expect(hiddenInputs).toHaveLength(9);

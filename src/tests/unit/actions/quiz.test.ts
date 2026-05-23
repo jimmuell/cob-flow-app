@@ -52,7 +52,89 @@ vi.mock('@/lib/db/client', () => ({
 
 import { auditLog } from '@/lib/audit/log';
 
-const { deleteQuiz } = await import('@/features/content-manager/actions/quiz');
+const { deleteQuiz, updateQuiz } = await import('@/features/content-manager/actions/quiz');
+
+// ─── updateQuiz ───────────────────────────────────────────────────────────────
+
+const baseUpdatedAt = new Date('2025-01-01T00:00:00.000Z');
+
+const validSaveInput = {
+  pass_threshold:        80,
+  questions:             [],
+  last_known_updated_at: baseUpdatedAt.toISOString(),
+};
+
+describe('updateQuiz', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockTx.select = vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([{
+          id:        'quiz-001',
+          updatedAt: baseUpdatedAt,
+          moduleId:  'mod-001',
+          courseId:  null,
+        }]),
+      }),
+    });
+    mockTx.update = vi.fn().mockReturnThis();
+    mockTx.set    = vi.fn().mockReturnThis();
+    mockTx.where  = vi.fn().mockResolvedValue(undefined);
+    mockTx.delete = vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
+    mockTx.insert = vi.fn().mockReturnThis();
+    mockTx.values = vi.fn().mockResolvedValue(undefined);
+  });
+
+  it('saves questions and calls audit log on success', async () => {
+    const result = await updateQuiz('quiz-001', {
+      ...validSaveInput,
+      questions: [{
+        question_type:     'multiple_choice',
+        stem_markdown:     'Q?',
+        mc_options:        ['a', 'b', 'c', 'd'],
+        mc_correct_option: 'a',
+      }],
+    });
+
+    expect(result.ok).toBe(true);
+    expect(auditLog.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'quiz_updated', target: 'quiz-001' }),
+    );
+  });
+
+  it('returns CONFLICT error when timestamp is stale', async () => {
+    const staleInput = {
+      ...validSaveInput,
+      last_known_updated_at: new Date('2024-12-31T00:00:00.000Z').toISOString(),
+    };
+
+    const result = await updateQuiz('quiz-001', staleInput);
+
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/CONFLICT/);
+  });
+
+  it('rejects unauthenticated user', async () => {
+    const { getCurrentUser } = await import('@/lib/auth/session');
+    vi.mocked(getCurrentUser).mockResolvedValueOnce(null);
+
+    const result = await updateQuiz('quiz-001', validSaveInput);
+    expect(result.ok).toBe(false);
+    expect((result as { ok: false; error: string }).error).toMatch(/authenticated/i);
+  });
+
+  it('rejects invalid save schema', async () => {
+    const result = await updateQuiz('quiz-001', {
+      pass_threshold:        150, // out of range
+      questions:             [],
+      last_known_updated_at: baseUpdatedAt.toISOString(),
+    });
+
+    expect(result.ok).toBe(false);
+  });
+});
+
+// ─── deleteQuiz ───────────────────────────────────────────────────────────────
 
 describe('deleteQuiz', () => {
   beforeEach(() => vi.clearAllMocks());

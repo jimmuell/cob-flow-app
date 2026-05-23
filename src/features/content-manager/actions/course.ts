@@ -49,8 +49,13 @@ export async function createCourse(
   const perm = canPerform({ user, action: 'CREATE_COURSE' });
   if (perm.decision === 'deny') return { ok: false, error: perm.reason };
 
-  // Normalize empty-string sequence_id (from unselected <select>) to undefined before validation
-  const normalizedInput = { ...input, sequence_id: input.sequence_id === '' ? undefined : input.sequence_id };
+  // Normalize empty-string/NaN values from RHF valueAsNumber on optional number inputs
+  const normalizedInput = {
+    ...input,
+    sequence_id:    input.sequence_id === '' ? undefined : input.sequence_id,
+    estimated_hours: typeof input.estimated_hours === 'number' && isNaN(input.estimated_hours) ? undefined : input.estimated_hours,
+    sequence_order:  typeof input.sequence_order  === 'number' && isNaN(input.sequence_order)  ? undefined : input.sequence_order,
+  };
   const validated = courseFormSchema.safeParse(normalizedInput);
   if (!validated.success) {
     return { ok: false, error: validated.error.issues[0]?.message ?? 'Invalid input' };
