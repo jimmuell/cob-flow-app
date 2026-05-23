@@ -801,13 +801,13 @@ An unlock is soft-revoked by setting `revoked_at`, `revoked_by_user_id`, and `re
     new/                                Create course
     [courseId]/                         Course detail: modules list + quizzes
       edit/                             Edit course metadata
-      modules/[moduleId]/               Module detail: lessons + quiz
-        edit/                           Edit module metadata
-        lessons/[lessonId]/             Lesson slide editor
-        quiz/                           Module quiz editor
-          new/
-          [quizId]/
+      modules/new/                      Create module (course context required)
       course-quizzes/[quizId]/          Course-level quiz editor
+  modules/                              Module detail + authoring (top-level; not nested under courses)
+    [moduleId]/                         Module detail: lessons + quiz
+      edit/                             Edit module metadata
+      lessons/[lessonId]/               Lesson slide editor
+      quizzes/[quizId]/                 Module quiz editor
 
 /management/content/                    Management authoring root (Customer content)
   sequences/                            [mirrors /admin/content/sequences/ structure]

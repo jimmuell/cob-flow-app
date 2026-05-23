@@ -438,11 +438,12 @@ CP3 complete. Session-aware DB client available. CM tables exist in local Postgr
    - `courses/new/page.tsx` — Create course
    - `courses/[courseId]/page.tsx` — Course detail (Modules / Course Quizzes / Settings tabs)
    - `courses/[courseId]/edit/page.tsx` — Edit course metadata
-   - `courses/[courseId]/modules/[moduleId]/page.tsx` — Module detail
-   - `courses/[courseId]/modules/[moduleId]/edit/page.tsx` — Edit module metadata
+   - `courses/[courseId]/modules/new/page.tsx` — Create module (course context required)
+   - `courses/[courseId]/course-quizzes/[quizId]/page.tsx` — Stub (CP6)
+   - `modules/[moduleId]/page.tsx` — Module detail
+   - `modules/[moduleId]/edit/page.tsx` — Edit module metadata
    - `modules/[moduleId]/lessons/[lessonId]/page.tsx` — Stub (CP5)
    - `modules/[moduleId]/quizzes/[quizId]/page.tsx` — Stub (CP6)
-   - `courses/[courseId]/course-quizzes/[quizId]/page.tsx` — Stub (CP6)
 
 2. Add layout-level ADMIN role gate to `src/app/(app)/admin/content/layout.tsx`:
    ```typescript
