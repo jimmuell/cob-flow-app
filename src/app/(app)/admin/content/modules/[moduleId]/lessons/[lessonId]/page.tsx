@@ -10,6 +10,7 @@ import { deleteLesson } from '@/features/content-manager/actions/lesson';
 import { SlideEditor } from '@/features/content-manager/components/slide-editor';
 import { slidesArraySchema } from '@/features/content-manager/schemas/slide';
 import type { Slide } from '@/features/content-manager/schemas/slide';
+import { signSlideImageMap } from '@/features/content-manager/lib/storage';
 
 export default async function LessonSlideEditorPage({
   params,
@@ -58,6 +59,12 @@ export default async function LessonSlideEditorPage({
   const parsed = slidesArraySchema.safeParse(lesson.slides);
   const initialSlides: Slide[] = parsed.success ? parsed.data : [];
 
+  const imagePaths = initialSlides
+    .filter((s) => s.type === 'image' || s.type === 'imported')
+    .map((s) => (s as { image_path: string }).image_path)
+    .filter(Boolean);
+  const signedImageUrls = await signSlideImageMap(imagePaths);
+
   return (
     <div className="space-y-3">
       {/* Breadcrumb */}
@@ -87,6 +94,7 @@ export default async function LessonSlideEditorPage({
         lessonTitle={lesson.title}
         moduleId={moduleId}
         initialSlides={initialSlides}
+        signedImageUrls={signedImageUrls}
       />
 
       {/* Admin delete — only for archived lessons */}

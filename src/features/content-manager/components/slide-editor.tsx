@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { updateLessonSlides, uploadSlideImage, importPdfSlides } from '../actions/lesson';
+import { updateLessonSlides, uploadSlideImage, importPdfSlides, getSignedImageUrl } from '../actions/lesson';
 import type { Slide } from '../schemas/slide';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ interface WorkingSlide {
   type: 'text' | 'image' | 'imported';
   heading?: string;
   body_markdown?: string;
-  image_url?: string;
+  image_path?: string;
   caption?: string;
   source_pdf?: string;
   source_page?: number;
@@ -33,6 +33,7 @@ interface SlideEditorProps {
   lessonTitle: string;
   moduleId: string;
   initialSlides: Slide[];
+  signedImageUrls: Record<string, string>;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -71,10 +72,11 @@ function SlideLabel(s: WorkingSlide, i: number) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: SlideEditorProps) {
+export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides, signedImageUrls }: SlideEditorProps) {
   const [slides, setSlides] = useState<WorkingSlide[]>(() =>
     initialSlides.map((s) => ({ ...s, _clientId: crypto.randomUUID() }))
   );
+  const [localSignedUrls, setLocalSignedUrls] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState(0);
   const [preview, setPreview] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
@@ -118,10 +120,15 @@ export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: 
     }, 0);
   }
 
+  function resolveImageSrc(path: string | undefined): string {
+    if (!path) return '';
+    return localSignedUrls[path] ?? signedImageUrls[path] ?? path;
+  }
+
   function addSlide(type: 'text' | 'image') {
     setAddMenuOpen(false);
     const newSlide: WorkingSlide = type === 'image'
-      ? { _clientId: crypto.randomUUID(), order: slides.length + 1, type: 'image', image_url: '', caption: '', body_markdown: '' }
+      ? { _clientId: crypto.randomUUID(), order: slides.length + 1, type: 'image', image_path: '', caption: '', body_markdown: '' }
       : { _clientId: crypto.randomUUID(), order: slides.length + 1, type: 'text', heading: '', body_markdown: '' };
     setSlides((ss) => [...ss, newSlide]);
     setSelected(slides.length);
@@ -179,7 +186,12 @@ export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: 
     fd.append('file', file);
     const result = await uploadSlideImage(lessonId, fd);
     if (result.ok) {
-      updateCurrent({ image_url: result.data.imageUrl });
+      const { imagePath } = result.data;
+      updateCurrent({ image_path: imagePath });
+      const signResult = await getSignedImageUrl(imagePath);
+      if (signResult.ok) {
+        setLocalSignedUrls((prev) => ({ ...prev, [imagePath]: signResult.data.signedUrl }));
+      }
     } else {
       setNotification({ type: 'error', message: result.error });
     }
@@ -334,9 +346,9 @@ export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: 
                 )}
                 {cur.type === 'image' && (
                   <>
-                    {cur.image_url
+                    {resolveImageSrc(cur.image_path)
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={cur.image_url} alt={cur.caption ?? ''} className="w-full rounded mb-3 object-contain max-h-96" />
+                      ? <img src={resolveImageSrc(cur.image_path)} alt={cur.caption ?? ''} className="w-full rounded mb-3 object-contain max-h-96" />
                       : <div className="w-full h-48 bg-slate-200 rounded mb-3 flex items-center justify-center text-slate-400 text-sm">No image uploaded</div>
                     }
                     {cur.caption && <p className="text-xs text-slate-500 italic text-center mb-2">{cur.caption}</p>}
@@ -349,9 +361,9 @@ export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: 
                 )}
                 {cur.type === 'imported' && (
                   <>
-                    {cur.image_url
+                    {resolveImageSrc(cur.image_path)
                       // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={cur.image_url} alt={cur.caption ?? ''} className="w-full rounded mb-3 object-contain max-h-96" />
+                      ? <img src={resolveImageSrc(cur.image_path)} alt={cur.caption ?? ''} className="w-full rounded mb-3 object-contain max-h-96" />
                       : <div className="w-full h-48 bg-slate-200 rounded mb-3 flex items-center justify-center text-slate-400 text-sm">
                           {cur.source_pdf ? `${cur.source_pdf} — p.${cur.source_page}` : 'Imported page'}
                         </div>
@@ -403,10 +415,10 @@ export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: 
                   <>
                     <div>
                       <label className="text-xs font-medium text-slate-600 block mb-1">Image</label>
-                      {cur.image_url && (
+                      {resolveImageSrc(cur.image_path) && (
                         <div className="mb-2">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={cur.image_url} className="max-h-48 rounded border border-slate-200 object-contain" alt="" />
+                          <img src={resolveImageSrc(cur.image_path)} className="max-h-48 rounded border border-slate-200 object-contain" alt="" />
                         </div>
                       )}
                       <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors">
@@ -451,9 +463,9 @@ export function SlideEditor({ lessonId, lessonTitle, moduleId, initialSlides }: 
                       <p className="text-xs text-slate-500">
                         Source: {cur.source_pdf ?? 'unknown PDF'} · Page {cur.source_page ?? '?'}
                       </p>
-                      {cur.image_url
+                      {resolveImageSrc(cur.image_path)
                         // eslint-disable-next-line @next/next/no-img-element
-                        ? <img src={cur.image_url} className="mt-3 max-h-48 rounded border border-slate-200 object-contain" alt="" />
+                        ? <img src={resolveImageSrc(cur.image_path)} className="mt-3 max-h-48 rounded border border-slate-200 object-contain" alt="" />
                         : <div className="mt-3 h-32 bg-slate-200 rounded flex items-center justify-center text-slate-400 text-xs">PDF page image</div>
                       }
                     </div>
