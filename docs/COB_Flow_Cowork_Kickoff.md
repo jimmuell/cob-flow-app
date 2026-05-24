@@ -1,6 +1,6 @@
-# Next Cowork Session — Kickoff Prompt
+# 📋 COB Flow — Cowork Session Kickoff
 
-This file holds the prompt to paste into a new Cowork session in the Claude.ai desktop app to pick up where the last session left off. It is the authoritative handoff mechanism between Cowork sessions.
+This file holds the prompt to paste into a new Cowork session to pick up where the last session left off. It is the authoritative handoff mechanism between Cowork sessions.
 
 ## How to use
 
@@ -24,7 +24,7 @@ The update is done via a Cowork-generated agent prompt at the end of the session
 
 ## Current kickoff prompt
 
-State: end of session 2026-05-23. cob-flow-app at HEAD `b6c6790` (CP6 + Auto COB demo seed + FR capstone fix + full end-of-session cleanup pass). cob-auto-claim at HEAD `1e570c1` (unchanged since 2026-05-21).
+State: end of session 2026-05-24. cob-flow-app at HEAD `83405ea` (docs-only pivot: CM build paused snapshot + Phase C design review working doc + handoff updated; see History). cob-auto-claim at HEAD `1e570c1` (unchanged since 2026-05-21).
 
 ---
 
@@ -37,41 +37,20 @@ Read these documents in this order before responding:
 1. `cob-flow-app/DIVISION_OF_LABOR.md` — three-party working model. You do not directly write to or commit in the repos; all repo changes flow through prompts you generate for the Claude Code agents to execute.
 2. `cob-flow-app/CLAUDE.md` — locked stack (Next.js 15, React 19, TS strict, Tailwind, shadcn, Supabase + Drizzle, Vercel), four-role model (Analyst/Supervisor/Manager/Admin), canPerform contract, audit log shape, critical guardrails (NO_FAULT_STATES empty, Job Levels ≠ Tiers, COB ≠ CoC, Customer not Tenant in UI), and the "Accumulated conventions" section that lists post-CP4 patterns the agents must follow.
 3. `cob-auto-claim/CLAUDE.md` — what cob-auto-claim contains (planning, strategy, GTM, external reference material) and the single-source-of-truth split with cob-flow-app.
-4. `cob-flow-app/docs/COB_Flow_Handoff.md` — full project context (§§1–10) and the NextJS conversion + CM build phase log (§11). Refreshed end of session 2026-05-23 to reflect the CM build scope pivot.
-5. `cob-flow-app/docs/superpowers/specs/CONTENT_MANAGER_SPEC.md` — locked Content Manager spec (commit `532dd85`, with end-of-session corrections at §3 image_path and §7 route map). At minimum read §3 (schema), §7 (route map), §8 (editors), §9 (oversight model), §10 (audit events), §12 (bootstrap checklist).
-6. `cob-flow-app/docs/superpowers/plans/CONTENT_MANAGER_IMPLEMENTATION_PLAN.md` — execution plan covering CP1–CP11. Read CP7 in full plus the CP roadmap context. Route paths in CP4 step 1 reflect the actual flattened layout (post end-of-session 2026-05-23 correction).
+4. `cob-flow-app/docs/COB_Flow_Handoff.md` — full project context (§§1–10) and the Next.js conversion + CM build phase log (§11). Updated end of session 2026-05-24 to reflect the CM pause and Phase C resumption.
+5. `cob-flow-app/docs/COB_Flow_CM_Build_Paused.md` — CM build paused snapshot: what shipped CP1–CP6, what's live in the running app, CP7–CP11 owed, known parked drift items, thaw checklist.
+6. `cob-flow-app/docs/COB_Flow_Phase_C_Design_Review_In_Progress.md` — Phase C design review working doc. §1 (Scope & Routes) is CLOSED with 6 decisions. §2 (Data Layer) is DRAFTED, pending Jim's review. §3 and §4 not yet drafted.
 7. `cob-flow-app/docs/COB_Flow_Cowork_Kickoff.md` — this file. The History section is your record of accumulated session decisions.
-8. `cob-flow-app/content/courses/auto-cob-wisconsin/README.md` and `conventions.md` — the Auto COB course scaffolding the Content Manager will ingest in CP11.
 
 After reading, ack scope in one paragraph confirming you understand:
 
 - The three-party working model. Jim is architect/SME; Cowork generates prompts and never edits repos directly; Claude Code agents in VS Code execute prompts, one per repo. cob-flow-app agent owns its repo; cob-auto-claim agent owns its repo.
-- Current state: cob-flow-app at HEAD `b6c6790`, cob-auto-claim at HEAD `1e570c1`. CM spec locked at `532dd85` (with end-of-session corrections). Implementation plan authored. CP1–CP6 shipped:
-    - CP1 (foundations): deps installed, src/features/content-manager/ scaffolded, AuditEvent.category extended with 'LEARNING', AuthorityBands extended with letterOverride and templatePublication
-    - CP2 (db): all CM Drizzle tables, RLS policies, helper functions, recommended indexes; tenants.features JSONB and teams.manager_id added
-    - CP3 (plumbing): src/lib/db/client.ts session-context wrapper for RLS; content-assets Supabase Storage bucket
-    - CP4 (admin authoring routes): /admin/content/* with sequence/course/module CRUD; post-CP4 refinements landed Learning Path rename, cascade archive, Admin-only hard delete for archived content, status filter on catalog
-    - CP5 (slide editor, commit d2543c2): three-pane editor, citation helper bar (9 buttons), synchronous PDF import ≤50 pages via pdf-to-img, image upload via service-role server client
-    - CP6 (quiz editor, commits f242d77 → a2d4207): MC + FR modes, pass_threshold input (MC) vs static "Completion-based" label (FR), optimistic concurrency via updated_at + DELETE+INSERT for child rows, flat WorkingQuestion state pattern for polymorphic editing, course-quizzes route net-new, Course Quizzes section on course detail
-    - Side-quest demo seed (commits a433e77 + 5f02182): Auto COB demo at scripts/seed-content-manager-demo.ts — 1 LP / 4 courses / 12 modules / 36 lessons / 16 quizzes / 48 questions. Idempotent + `--reset` flag (npm run db:seed:cm / db:seed:cm:reset). Courses 1 and 3 capstones are MC; Courses 2 and 4 are FR with model answers and rubrics.
-    - End-of-session cleanup pass (commits ceeb38e → b6c6790): slide image storage refactored to persist bucket-path + sign at render time with 1-hour expiration (eliminates the 1-year signed URL expiry concern); SQL Admin demo user name corrected (S. Patel → A. Donnelly in seed migration 0004, with migration 0005 fixing the already-applied DB row); spec §7 + plan CP4/CP5/CP6 route paths corrected to reflect actual flattened layout (no /edit/ subroutes; modules top-level not nested under courses; quiz/new/ removed since quizzes are created inline); spec §3 slide JSONB updated to image_path; CLAUDE.md updated with the render-time signing convention and the full accumulated-conventions catalog.
-- Accumulated conventions are now consolidated in CLAUDE.md's "Accumulated conventions" section. Reference that as the single source of truth for the post-CP4 patterns Cowork must enforce when drafting agent prompts.
-- What's parked:
-    - cob-auto-claim hasn't moved since 2026-05-21. The repo holds planning, GTM, reference PDFs, case-law scans; no edits queued.
-    - Auto COB Wisconsin course chapter authoring is deferred until the CM is fully live (post-CP9), then ingested via CP11. Chapter 1 scaffolding files are committed; Chapters 2–12 not yet drafted. The seed dataset's lesson body content is plausible filler, NOT canonical curriculum — to be replaced at CP11.
-    - Minor drift to sweep at some future cleanup pass: spec §7 mentions a `sequences/` list route within /admin/content/ that doesn't exist as a separate page (the list is served by /admin/content/page.tsx via the three-tab catalog); 4 orphan quiz_questions from CP6 E2E test residue (48 in LP vs 52 in DB); drizzle migration 0003 numbering gap + drizzle/meta out of sync with on-disk migrations (likely benign; worth a `supabase db diff` check sometime).
-- Next move: CP7 — Management authoring routes mirror + tenant feature flag gate. The implementation plan's CP7 section is authoritative. Scope:
-    - Mirror the /admin/content/* route tree at /management/content/*, scoped to content_type='customer' AND session tenant_id
-    - Role gate to MANAGER + SUPERVISOR with equal CRUD rights (spec §7 — no publish-approval workflow yet)
-    - Tenant feature flag layout gate (`tenant.features.content_manager`) at /learn/* and /management/content/*; /admin/content/* is NOT flag-gated
-    - Conditional sidebar nav for "Learning" and "Learning Content" items based on the feature flag
-    - Seed `tenants.features = { content_manager: true }` for all three demo tenants
-    - Component reuse: the SlideEditor (CP5) and QuizEditor (CP6) work unchanged; only the role gate and content_type scope change
-    - Tests + full verification gate including manual smoke in npm run dev with at least one Manager and one Supervisor demo account
+- Current state: cob-flow-app at HEAD `83405ea`, cob-auto-claim at HEAD `1e570c1`. CM spec locked at `532dd85` (with end-of-session corrections). CM build paused after CP6 + demo seed + cleanup pass (`b6c6790`). Phase C design review in progress: §1 closed, §2 drafted.
+- Phase C §1 decisions (6, all closed): (1) row-click on Claims & Triage list navigates to `/claims/[claimId]` Phase D placeholder showing claim ID, patient name, and 7 future tabs; (2) empty-state component (centered icon + headline + subhead, no CTA) when a fixture group is empty; (3) tenant-switch E2E required for all three Phase C pages — non-negotiable; (4) "Claims & Triage" workspace label and `/claims` URL preserved in Phase C, rename deferred to Phase D; (5) KPI tiles filter `CUSTOMER_KPIS` by `getActiveTenant().id`; (6) Dashboard quick-links render all prototype tiles, with Phase D+ surfaces visually disabled or pill-tagged with their target phase.
+- Phase C §2 open design questions (5, all with defaults): (1) helpers in `src/lib/data/` (not feature-scoped); (2) 4/3/3 fixture distribution with c004 on Lakeshore; (3) KPI null → em-dashes, page shape preserved (not full-page empty state); (4) Vitest unit-test coverage for all four helper behaviors (yes); (5) `getActiveTenant()` failure → trust the middleware invariant, don't add a defensive redirect.
+- What's parked: CM CP7–CP11 (thaw after Phase C ships per the `docs/COB_Flow_CM_Build_Paused.md` thaw checklist); cob-auto-claim (planning/GTM/reference, no edits queued); Auto COB Wisconsin chapter authoring (deferred until CM fully live, CP11).
 
-Propose the CP7 agent prompt as your first paste-target after the ack. Single fenced code block, 4-space indentation inside for any code samples, self-contained for an agent that hasn't seen this conversation. Reference: CONTENT_MANAGER_SPEC.md §3/§4/§7 (RLS scope chain), the implementation plan's CP7 section verbatim, the existing /admin/content/* patterns to mirror (src/app/(app)/admin/content/), the conventions catalog in CLAUDE.md, and the existing components (SlideEditor at src/features/content-manager/components/slide-editor.tsx, QuizEditor at src/features/content-manager/components/quiz-editor.tsx).
-
-Don't propose work beyond CP7. CP8 (learner surface), CP9 (completion wiring), CP10 (async PDF + oversight surface), CP11 (course ingestion) come in subsequent sessions.
+Propose reviewing §2 with Jim as the first move — walk through each of the five open design questions one at a time, confirm or override the defaults, then close §2. Do not draft §3 until §2 is closed. After §2 closes, draft §3 (Component Patterns). After §3 closes, draft §4 (Testing Strategy). After all four sections close, produce the consolidated spec commit prompt for the cob-flow-app agent.
 
 END PROMPT
 
@@ -79,5 +58,6 @@ END PROMPT
 
 ## History
 
+- 2026-05-24: Session pivoted from CM CP7 back to Phase C. Landed four docs-only commits on main: (1) `docs/COB_Flow_CM_Build_Paused.md` — CM build pause snapshot (what shipped, what's live, CP7–CP11 owed, thaw checklist); (2) `docs/COB_Flow_Phase_C_Design_Review_In_Progress.md` — Phase C design review working doc (§1 closed with 6 decisions, §2 drafted with `src/lib/data/` helper architecture and 5 open questions); (3) handoff doc updated (last-updated, current-phase cell, §10 next workstreams, §11 restructured with "deferred then resumed" arc and Phase C Resuming section); (4) kickoff doc rewritten to point at Phase C design review §2 review. CM remains paused cleanly at CP6 + demo seed + cleanup pass (`b6c6790`). All CM authoring surfaces stay live in the running app. cob-flow-app: `b6c6790` → `83405ea`. cob-auto-claim unchanged at `1e570c1`.
 - 2026-05-23: Session shipped CP5 (slide editor, commit d2543c2), CP6 (quiz editor, commits f242d77 → a2d4207), Auto COB demo seed script side quest (commits a433e77 + 5f02182), and full end-of-session cleanup pass (commits ceeb38e → b6c6790). Cleanup pass included: slide image storage refactored to bucket-path + render-time signing (closes the 1-year signed URL expiry concern); SQL Admin demo user reconciled to A. Donnelly across seed migration + already-applied DB row; spec §7 and plan CP4/CP5/CP6 route paths corrected to match actual flattened layout (no /edit/ subroutes; modules top-level; quiz/new/ removed); spec §3 slide JSONB updated to image_path; CLAUDE.md absorbed full accumulated-conventions catalog as new section; handoff doc §11 phase log brought current with the CM build scope pivot. Memorialized conventions across the session: 1-hour render-time signing for slide images, optimistic concurrency via updated_at + DELETE+INSERT, flat WorkingQuestion state for polymorphic editors, A. Donnelly canonical Admin demo user, E2E auth sync barrier convention, label-rename grep discipline, full verification gate non-negotiable, follow-the-spec-literally on type/shape directives, end-of-CP audit pass for spec/plan drift. CP5 was single-commit (deviation from plan); CP6 honored four-commit pattern; cleanup pass was multi-commit per sub-task. cob-flow-app: 035d662 → b6c6790. cob-auto-claim unchanged at 1e570c1.
 - 2026-05-21: Initial creation. Captures the end-of-session state after the Content Manager scope decision, the working-model clarification, and the DIVISION_OF_LABOR.md commits to both repos.
